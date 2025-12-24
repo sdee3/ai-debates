@@ -77,7 +77,7 @@ app.post("/verify-password", async (c) => {
     }
 
     return c.json({ error: "Incorrect password" }, 401)
-  } catch (error) {
+  } catch {
     return c.json({ error: "Invalid request" }, 400)
   }
 })
@@ -103,7 +103,7 @@ app.post("/request", async (c) => {
         headers: {
           Authorization: `Bearer ${OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:5173",
+          "HTTP-Referer": c.req.header("Host") || "http://localhost:5137",
           "X-Title": "AI Debate",
         },
         body: JSON.stringify({

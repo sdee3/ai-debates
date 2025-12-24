@@ -1,0 +1,20 @@
+{
+  "plugins": [],
+  "rules": {
+    "no-unused-vars": "error",
+    "no-undef": "off",
+    "no-debugger": "error",
+    "eqeqeq": "error",
+    "no-constant-condition": "error",
+    "no-empty": "error",
+    "no-extra-boolean-cast": "error",
+    "no-sparse-arrays": "error"
+  },
+  "languageOptions": {
+    "globals": {
+      "console": "readonly",
+      "fetch": "readonly",
+      "process": "readonly"
+    }
+  }
+}
