@@ -36,7 +36,7 @@ jobs:
         run: pnpm build
 
       - name: Create deployment zip
-        run: zip -r ../server-deploy.zip package.json pnpm-lock.yaml dist
+        run: zip -r ../server-deploy.zip package.json pnpm-lock.yaml Dockerfile dist
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
