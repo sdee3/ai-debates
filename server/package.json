@@ -7,7 +7,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "deploy": "sst deploy",
+    "sst-deploy": "sst deploy",
     "dev": "tsx watch src/index.ts",
     "sst-dev": "sst dev",
     "start": "node dist/index.js"
