@@ -2,28 +2,20 @@
   "name": "debates-server",
   "version": "1.0.0",
   "type": "module",
-  "bin": {
-    "aws": "bin/aws.js"
-  },
   "scripts": {
     "build": "tsc",
-    "sst-deploy": "sst deploy",
     "dev": "tsx watch src/index.ts",
-    "sst-dev": "sst dev",
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@hono/node-server": "^1.13.7",
-    "dotenv": "^16.4.7",
-    "hono": "^4.6.14",
-    "sst": "3.17.25"
+    "@hono/node-server": "^1.19.7",
+    "dotenv": "^16.6.1",
+    "hono": "^4.11.1"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.159",
-    "@types/node": "^20.11.17",
-    "constructs": "^10.0.0",
-    "sst": "^3.17.25",
-    "tsx": "^4.7.1",
-    "typescript": "^5.3.3"
+    "@types/node": "^20.19.27",
+    "constructs": "^10.4.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
