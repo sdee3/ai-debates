@@ -11,6 +11,7 @@ export default function Debate() {
   const { id } = useParams<{ id: string }>()
   const { getDebate } = useDebateStore()
   const { models } = useModels()
+  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
 
   // Run the debate logic
   useDebateRunner(id || "")
@@ -49,13 +50,20 @@ export default function Debate() {
 
   return (
     <div className="space-y-8 pb-12">
+      {!isAuthenticated && (
+        <div className="bg-secondary/50 border border-secondary text-secondary-foreground px-4 py-2 rounded-lg text-sm text-center mb-4">
+          Log in to create your own thread and let AI models debate
+        </div>
+      )}
       <div className="flex items-center space-x-4">
-        <Link
-          to="/"
-          className="p-2 rounded-full hover:bg-secondary transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
+        {isAuthenticated && (
+          <Link
+            to="/"
+            className="p-2 rounded-full hover:bg-secondary transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+        )}
         <h1 className="text-2xl font-bold leading-tight">{debate.topic}</h1>
       </div>
 
