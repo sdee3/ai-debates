@@ -73,11 +73,11 @@ variable "app_runner_max_concurrency" {
 variable "app_runner_min_instances" {
   description = "Minimum instances for App Runner auto-scaling"
   type        = number
-  default     = 0
+  default     = 1
 }
 
 variable "app_runner_max_instances" {
   description = "Maximum instances for App Runner auto-scaling"
   type        = number
-  default     = 2
+  default     = 1
 }
