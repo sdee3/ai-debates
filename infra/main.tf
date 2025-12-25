@@ -20,7 +20,11 @@ terraform {
 }
 
 # AWS Provider configuration
+# Credentials should be provided via environment variables:
+# - AWS_ACCESS_KEY_ID
+# - AWS_SECRET_ACCESS_KEY
+# - AWS_REGION (optional, will use var.aws_region)
+# For Terraform Cloud, set these as workspace environment variables
 provider "aws" {
   region = var.aws_region
-  profile = var.environment
 }
