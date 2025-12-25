@@ -12,7 +12,7 @@ const POPULAR_MODELS = [
   { id: "anthropic/claude-haiku-4.5", name: "Claude Haiku 4.5" },
   { id: "x-ai/grok-4.1-fast", name: "Grok 4.1 Fast" },
   { id: "moonshotai/kimi-k2-thinking", name: "Kimi K2 Thinking" },
-  { id: "deepseek/deepseek-v3.2-speciale", name: "Deepseek V3.2 Speciale" },
+  { id: "deepseek/deepseek-v3.2", name: "Deepseek V3.2" },
 ]
 
 export default function CreateDebate() {
