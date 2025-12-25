@@ -10,6 +10,7 @@ interface ModelSelectorProps {
   onSelect: (modelId: string) => void
   onRemove: (modelId: string) => void
   disabled?: boolean
+  hiddenModelIds?: string[]
 }
 
 export default function ModelSelector({
@@ -18,14 +19,16 @@ export default function ModelSelector({
   onSelect,
   onRemove,
   disabled,
+  hiddenModelIds = [],
 }: ModelSelectorProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
 
   const filteredModels = models.filter(
     (model) =>
-      model.name.toLowerCase().includes(search.toLowerCase()) ||
-      model.id.toLowerCase().includes(search.toLowerCase())
+      (model.name.toLowerCase().includes(search.toLowerCase()) ||
+        model.id.toLowerCase().includes(search.toLowerCase())) &&
+      !hiddenModelIds.includes(model.id)
   )
 
   return (

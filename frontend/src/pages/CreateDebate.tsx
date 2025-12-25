@@ -4,11 +4,28 @@ import { useModels } from "../hooks/useModels"
 import { useDebateStore } from "../store/useDebateStore"
 import ModelSelector from "../components/ModelSelector"
 import { Loader2, AlertCircle } from "lucide-react"
+import { cn } from "../lib/utils"
+
+const POPULAR_MODELS = [
+  { id: "google/gemini-3-flash-preview", name: "Gemini 3 Flash" },
+  { id: "openai/gpt-5.2-chat", name: "GPT 5.2 Chat" },
+  { id: "anthropic/claude-haiku-4.5", name: "Claude Haiku 4.5" },
+  { id: "x-ai/grok-4.1-fast", name: "Grok 4.1 Fast" },
+  { id: "moonshotai/kimi-k2-thinking", name: "Kimi K2 Thinking" },
+  { id: "deepseek/deepseek-v3.2-speciale", name: "Deepseek V3.2 Speciale" },
+]
 
 export default function CreateDebate() {
   const navigate = useNavigate()
   const { models, loading, error } = useModels()
   const { addDebate } = useDebateStore()
+
+  const availableModels = [...models]
+  POPULAR_MODELS.forEach((pop) => {
+    if (!availableModels.find((m) => m.id === pop.id)) {
+      availableModels.push(pop)
+    }
+  })
 
   const [topic, setTopic] = useState("")
   const [selectedModels, setSelectedModels] = useState<string[]>([])
@@ -88,8 +105,9 @@ export default function CreateDebate() {
             </span>
           </label>
           <ModelSelector
-            models={models}
+            models={availableModels}
             selectedModels={selectedModels}
+            hiddenModelIds={POPULAR_MODELS.map((m) => m.id)}
             onSelect={(id) => {
               setSelectedModels([...selectedModels, id])
               setValidationError(null)
@@ -101,6 +119,40 @@ export default function CreateDebate() {
           <p className="text-xs text-muted-foreground">
             Choose models from OpenRouter to participate in the debate.
           </p>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-foreground/80">
+            Popular Models
+          </label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {POPULAR_MODELS.map((model) => {
+              const isSelected = selectedModels.includes(model.id)
+              return (
+                <button
+                  key={model.id}
+                  onClick={() => {
+                    if (isSelected) {
+                      setSelectedModels(
+                        selectedModels.filter((m) => m !== model.id)
+                      )
+                    } else {
+                      setSelectedModels([...selectedModels, model.id])
+                      setValidationError(null)
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center justify-center px-4 py-3 text-sm font-medium rounded-xl border transition-all duration-200",
+                    isSelected
+                      ? "bg-primary/10 border-primary text-primary shadow-sm"
+                      : "bg-background/50 border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-accent/5"
+                  )}
+                >
+                  {model.name}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {validationError && (

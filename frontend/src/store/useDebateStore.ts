@@ -29,6 +29,7 @@ interface DebateState {
     modelId: string,
     updates: Partial<DebateResponse>
   ) => void
+  deleteDebate: (id: string) => void
 }
 
 export const useDebateStore = create<DebateState>()(
@@ -37,6 +38,10 @@ export const useDebateStore = create<DebateState>()(
       debates: [],
       addDebate: (debate) =>
         set((state) => ({ debates: [debate, ...state.debates] })),
+      deleteDebate: (id) =>
+        set((state) => ({
+          debates: state.debates.filter((d) => d.id !== id),
+        })),
       updateDebate: (id, updates) =>
         set((state) => ({
           debates: state.debates.map((d) =>

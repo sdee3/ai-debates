@@ -14,8 +14,13 @@ export default function PasswordProtection({
 
   useEffect(() => {
     const auth = localStorage.getItem("isAuthenticated")
-    if (auth === "true") {
+    const storedPassword = localStorage.getItem("platform_password")
+
+    if (auth === "true" && storedPassword) {
       setIsAuthenticated(true)
+    } else {
+      localStorage.removeItem("isAuthenticated")
+      setIsAuthenticated(false)
     }
   }, [])
 
@@ -37,6 +42,7 @@ export default function PasswordProtection({
 
       if (response.ok && data.success) {
         localStorage.setItem("isAuthenticated", "true")
+        localStorage.setItem("platform_password", password)
         setIsAuthenticated(true)
       } else {
         setError(data.error || "Incorrect password")

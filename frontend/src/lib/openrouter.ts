@@ -28,10 +28,12 @@ export async function generateCompletion(
   prompt: string
 ): Promise<{ content: string; error?: string }> {
   try {
+    const password = localStorage.getItem("platform_password")
     const response = await fetch("http://localhost:3000/request", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${password}`,
       },
       body: JSON.stringify({
         model: model,

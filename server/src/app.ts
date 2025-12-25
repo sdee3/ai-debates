@@ -83,6 +83,13 @@ app.post("/verify-password", async (c) => {
 })
 
 app.post("/request", async (c) => {
+  const authHeader = c.req.header("Authorization")
+  const token = authHeader?.split(" ")[1]
+
+  if (token !== PLATFORM_PASSWORD) {
+    return c.json({ error: "Unauthorized" }, 401)
+  }
+
   try {
     const body = await c.req.json()
     const { model, messages } = body
@@ -117,7 +124,9 @@ app.post("/request", async (c) => {
       const errorData = await response.json()
       return c.json(
         {
-          error: errorData.error?.message || "Failed to fetch from OpenRouter",
+          error: `OpenRouter Error: ${
+            errorData.error?.message || "Failed to fetch from OpenRouter"
+          }`,
         },
         response.status as any
       )
