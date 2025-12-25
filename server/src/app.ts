@@ -8,6 +8,11 @@ const app = new Hono()
 
 app.use("/*", cors())
 
+// Health check endpoint for App Runner
+app.get("/health", (c) =>
+  c.json({ status: "ok", timestamp: new Date().toISOString() })
+)
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 const PLATFORM_PASSWORD = process.env.PLATFORM_PASSWORD
 
