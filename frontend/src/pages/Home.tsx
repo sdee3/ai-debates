@@ -82,7 +82,19 @@ export default function Home() {
       try {
         const { debates: apiDebates } = await fetchDebates()
         const converted = apiDebates.map(convertApiDebateToDebate)
-        setDebates(converted)
+
+        // Merge with existing in-progress debates from store
+        const currentDebates = useDebateStore.getState().debates
+        const inProgressDebates = currentDebates.filter(
+          (d) => d.status !== "completed"
+        )
+
+        // Filter out in-progress debates that are already in the fetched list
+        const uniqueInProgress = inProgressDebates.filter(
+          (local) => !converted.find((remote) => remote.id === local.id)
+        )
+
+        setDebates([...uniqueInProgress, ...converted])
       } catch (error) {
         console.error("Failed to load debates:", error)
       } finally {

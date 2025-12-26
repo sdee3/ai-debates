@@ -212,7 +212,7 @@ app.get("/debates", async (c) => {
 
     const [data, countResult] = await Promise.all([
       query(
-        "SELECT uuid as id, topic, created_at FROM debates ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+        "SELECT uuid as id, topic, response, created_at FROM debates ORDER BY created_at DESC LIMIT $1 OFFSET $2",
         [limit, offset]
       ),
       query("SELECT COUNT(*) FROM debates"),
