@@ -1,6 +1,7 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { config } from "dotenv"
+import { createHash } from "crypto"
 import { rateLimiter } from "hono-rate-limiter"
 import { RedisStore } from "@hono-rate-limiter/redis"
 import {
@@ -101,11 +102,9 @@ app.post("/request", limiter, async (c) => {
     }
 
     // Create cache key based on request content
-    const cacheKey = `api:response:${Buffer.from(
-      JSON.stringify({ model, messages })
-    )
-      .toString("base64")
-      .slice(0, 64)}`
+    const cacheKey = `api:response:${createHash("sha256")
+      .update(JSON.stringify({ model, messages }))
+      .digest("hex")}`
 
     // Try to get from cache
     const cachedResponse = await cacheGet(cacheKey)

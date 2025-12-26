@@ -82,6 +82,7 @@ export default function Debate() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    setLoading(true)
     // First check if it's a local debate (UUID format)
     if (
       id &&
@@ -133,7 +134,10 @@ export default function Debate() {
   // Run the debate logic for local debates (not yet in DB)
   useDebateRunner(id || "")
 
-  if (loading) {
+  // Check if we're viewing a different debate than what's in the store
+  const isDebateMismatch = currentDebate && currentDebate.id !== id
+
+  if (loading || isDebateMismatch) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
