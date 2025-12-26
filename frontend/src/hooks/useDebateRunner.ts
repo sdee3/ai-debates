@@ -71,6 +71,7 @@ export function useDebateRunner(debateId: string) {
         .debates.find((d) => d.id === debateId)
       if (finalDebate) {
         await saveDebate({
+          id: debateId,
           topic: finalDebate.topic,
           responses: finalDebate.responses,
         })

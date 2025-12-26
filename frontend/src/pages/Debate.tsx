@@ -98,7 +98,7 @@ export default function Debate() {
       }
     }
 
-    // If not found locally or it's a numeric ID, load it properly
+    // If not found locally, try to load from backend
     const loadDebate = async () => {
       if (!id) return
 
@@ -106,19 +106,13 @@ export default function Debate() {
       setError(null)
 
       try {
-        const numericId = parseInt(id, 10)
-        if (isNaN(numericId)) {
-          // Local debate (not yet saved to backend) - but not found in store
-          setError("Debate not found")
+        // Fetch from backend
+        const apiDebate = await fetchDebateById(id)
+        if (apiDebate) {
+          const debate = convertApiDebateToDebate(apiDebate)
+          setCurrentDebate(debate)
         } else {
-          // Fetch from backend
-          const apiDebate = await fetchDebateById(numericId)
-          if (apiDebate) {
-            const debate = convertApiDebateToDebate(apiDebate)
-            setCurrentDebate(debate)
-          } else {
-            setError("Debate not found")
-          }
+          setError("Debate not found")
         }
       } catch (err) {
         console.error("Failed to load debate:", err)

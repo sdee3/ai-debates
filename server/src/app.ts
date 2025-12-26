@@ -165,7 +165,7 @@ app.post("/debates", limiter, async (c) => {
   if (authError) return authError
 
   try {
-    const { topic, responses } = await c.req.json()
+    const { topic, responses, id } = await c.req.json()
 
     if (!topic || !responses) {
       return c.json({ error: "Missing topic or responses" }, 400)
@@ -174,15 +174,23 @@ app.post("/debates", limiter, async (c) => {
     // Store debate in DB
     // We store the responses array in the 'response' column
     // We store an empty array in 'messages' to satisfy the schema
-    const result = await query(
-      "INSERT INTO debates (topic, messages, response) VALUES ($1, $2, $3) RETURNING id",
-      [topic, "[]", JSON.stringify(responses)]
-    )
+    let result
+    if (id) {
+      result = await query(
+        "INSERT INTO debates (uuid, topic, messages, response) VALUES ($1, $2, $3, $4) RETURNING uuid",
+        [id, topic, "[]", JSON.stringify(responses)]
+      )
+    } else {
+      result = await query(
+        "INSERT INTO debates (topic, messages, response) VALUES ($1, $2, $3) RETURNING uuid",
+        [topic, "[]", JSON.stringify(responses)]
+      )
+    }
 
     // Invalidate debates list cache
     await invalidateDebatesCache()
 
-    return c.json({ success: true, id: result.rows[0].id })
+    return c.json({ success: true, id: result.rows[0].uuid })
   } catch (error: any) {
     console.error("Error saving debate:", error)
     return c.json({ error: error.message || "Internal Server Error" }, 500)
@@ -204,7 +212,7 @@ app.get("/debates", async (c) => {
 
     const [data, countResult] = await Promise.all([
       query(
-        "SELECT id, topic, created_at FROM debates ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+        "SELECT uuid as id, topic, created_at FROM debates ORDER BY created_at DESC LIMIT $1 OFFSET $2",
         [limit, offset]
       ),
       query("SELECT COUNT(*) FROM debates"),
@@ -233,8 +241,11 @@ app.get("/debates", async (c) => {
 // GET single debate by ID
 app.get("/debates/:id", async (c) => {
   try {
-    const id = parseInt(c.req.param("id"))
-    if (isNaN(id)) {
+    const id = c.req.param("id")
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+    if (!uuidRegex.test(id)) {
       return c.json({ error: "Invalid debate ID" }, 400)
     }
 
@@ -244,7 +255,10 @@ app.get("/debates/:id", async (c) => {
       return c.json(JSON.parse(cached))
     }
 
-    const result = await query("SELECT * FROM debates WHERE id = $1", [id])
+    const result = await query(
+      "SELECT uuid as id, topic, messages, response, created_at FROM debates WHERE uuid = $1",
+      [id]
+    )
 
     if (result.rows.length === 0) {
       return c.json({ error: "Debate not found" }, 404)
@@ -266,13 +280,16 @@ app.delete("/debates/:id", async (c) => {
   if (authError) return authError
 
   try {
-    const id = parseInt(c.req.param("id"))
-    if (isNaN(id)) {
+    const id = c.req.param("id")
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+    if (!uuidRegex.test(id)) {
       return c.json({ error: "Invalid debate ID" }, 400)
     }
 
     const result = await query(
-      "DELETE FROM debates WHERE id = $1 RETURNING id",
+      "DELETE FROM debates WHERE uuid = $1 RETURNING uuid",
       [id]
     )
 

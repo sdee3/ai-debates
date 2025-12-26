@@ -33,6 +33,26 @@ export const initDb = async () => {
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  // Enable pgcrypto for UUID generation
+  await pool.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"')
+
+  // Add uuid column if it doesn't exist
+  await pool.query(`
+    ALTER TABLE debates
+    ADD COLUMN IF NOT EXISTS uuid UUID DEFAULT gen_random_uuid() NOT NULL
+  `)
+
+  // Add unique constraint
+  await pool.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'debates_uuid_key') THEN
+        ALTER TABLE debates ADD CONSTRAINT debates_uuid_key UNIQUE (uuid);
+      END IF;
+    END
+    $$;
+  `)
 }
 
 // Redis cache helpers

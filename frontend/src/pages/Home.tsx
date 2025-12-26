@@ -100,13 +100,12 @@ export default function Home() {
       // Optimistically delete from store
       deleteDebate(id)
 
-      // Delete from backend if it's a saved debate (numeric ID)
-      const numericId = parseInt(id, 10)
-      if (!isNaN(numericId)) {
-        const success = await deleteDebateApi(numericId)
-        if (!success) {
-          console.error("Failed to delete debate from backend")
-        }
+      // Delete from backend
+      const success = await deleteDebateApi(id)
+      if (!success) {
+        // If it failed, it might be a local-only debate or network error
+        // We've already removed it from the store, so just log it
+        console.log("Could not delete from backend (might be local-only)")
       }
     }
   }

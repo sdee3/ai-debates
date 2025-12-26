@@ -12,7 +12,7 @@ export interface OpenRouterModel {
 }
 
 export interface DebateFromApi {
-  id: number
+  id: string
   topic: string | null
   messages: any[]
   response: any
@@ -52,7 +52,7 @@ export async function fetchDebates(
 }
 
 export async function fetchDebateById(
-  id: number
+  id: string
 ): Promise<DebateFromApi | null> {
   try {
     const response = await fetch(`${API_URL}/debates/${id}`)
@@ -68,9 +68,10 @@ export async function fetchDebateById(
 }
 
 export async function saveDebate(debate: {
+  id?: string
   topic: string
   responses: any[]
-}): Promise<{ success: boolean; id?: number; error?: string }> {
+}): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const password = localStorage.getItem("platform_password")
     const response = await fetch(`${API_URL}/debates`, {
@@ -94,7 +95,7 @@ export async function saveDebate(debate: {
   }
 }
 
-export async function deleteDebateApi(id: number): Promise<boolean> {
+export async function deleteDebateApi(id: string): Promise<boolean> {
   try {
     const password = localStorage.getItem("platform_password")
     const response = await fetch(`${API_URL}/debates/${id}`, {
