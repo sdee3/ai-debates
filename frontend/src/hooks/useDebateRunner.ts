@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 import { useDebateStore } from "../store/useDebateStore"
-import { generateCompletion } from "../lib/openrouter"
+import { generateCompletion, saveDebate } from "../lib/openrouter"
 
 export function useDebateRunner(debateId: string) {
   const { getDebate, updateDebate, addResponse, updateResponse } =
@@ -19,7 +19,7 @@ export function useDebateRunner(debateId: string) {
 
       const prompt = `Topic: "${debate.topic}"`
 
-      const promises = debate.modelIds.map(async (modelId) => {
+      const promises = debate.modelIds.map(async (modelId: string) => {
         // Initialize response placeholder
         addResponse(debateId, {
           modelId,
@@ -64,6 +64,18 @@ export function useDebateRunner(debateId: string) {
       })
 
       await Promise.all(promises)
+
+      // Get the latest state of the debate to save it
+      const finalDebate = useDebateStore
+        .getState()
+        .debates.find((d) => d.id === debateId)
+      if (finalDebate) {
+        await saveDebate({
+          topic: finalDebate.topic,
+          responses: finalDebate.responses,
+        })
+      }
+
       updateDebate(debateId, { status: "completed" })
       runningRef.current = false
     }
