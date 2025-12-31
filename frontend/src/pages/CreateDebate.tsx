@@ -122,9 +122,38 @@ export default function CreateDebate() {
         </div>
 
         <div className="space-y-3">
-          <label className="text-sm font-medium text-foreground/80">
-            Popular Models
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-foreground/80">
+              Popular Models
+            </label>
+            <div className="flex gap-3 text-xs text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => {
+                  const popularIds = POPULAR_MODELS.map((m) => m.id)
+                  setSelectedModels(
+                    Array.from(new Set([...selectedModels, ...popularIds]))
+                  )
+                  setValidationError(null)
+                }}
+                className="hover:text-primary transition-colors"
+              >
+                Select All
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const popularIds = POPULAR_MODELS.map((m) => m.id)
+                  setSelectedModels(
+                    selectedModels.filter((id) => !popularIds.includes(id))
+                  )
+                }}
+                className="hover:text-primary transition-colors"
+              >
+                Deselect All
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {POPULAR_MODELS.map((model) => {
               const isSelected = selectedModels.includes(model.id)
