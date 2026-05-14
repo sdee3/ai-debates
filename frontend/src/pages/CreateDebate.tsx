@@ -62,15 +62,6 @@ export default function CreateDebate() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-[50vh] text-destructive">
-        <AlertCircle className="w-6 h-6 mr-2" />
-        {error}
-      </div>
-    )
-  }
-
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-8">
       <div className="space-y-2 text-center">
@@ -79,6 +70,13 @@ export default function CreateDebate() {
           Define a topic and select AI models to debate it.
         </p>
       </div>
+
+      {error && (
+        <div className="p-4 text-sm text-amber-400 bg-amber-500/10 rounded-xl border border-amber-500/20 flex items-center">
+          <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
+          Could not load models from API. Popular models are still available below.
+        </div>
+      )}
 
       <div className="space-y-8 bg-card/50 p-8 rounded-2xl border border-border/50 shadow-sm backdrop-blur-sm">
         <div className="space-y-3">

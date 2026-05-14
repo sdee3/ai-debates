@@ -1,0 +1,13 @@
+{
+  "name": "debates",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev",
+    "typecheck": "convex typecheck"
+  },
+  "dependencies": {
+    "convex": "^1.38.0",
+    "@convex-dev/auth": "^0.0.92"
+  }
+}

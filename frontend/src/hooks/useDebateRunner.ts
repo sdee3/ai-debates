@@ -1,8 +1,11 @@
 import { useEffect, useRef } from "react"
+import { useAction, useMutation } from "convex/react"
+import { api } from "../../../backend/convex/_generated/api"
 import { useDebateStore } from "../store/useDebateStore"
-import { generateCompletion, saveDebate } from "../lib/openrouter"
 
 export function useDebateRunner(debateId: string) {
+  const generateCompletion = useAction(api.actions.generateCompletion)
+  const createDebate = useMutation(api.mutations.createDebate)
   const { getDebate, updateDebate, addResponse, updateResponse } =
     useDebateStore()
   const debate = getDebate(debateId)
@@ -20,7 +23,6 @@ export function useDebateRunner(debateId: string) {
       const prompt = `Topic: "${debate.topic}"`
 
       const promises = debate.modelIds.map(async (modelId: string) => {
-        // Initialize response placeholder
         addResponse(debateId, {
           modelId,
           content: "",
@@ -29,24 +31,19 @@ export function useDebateRunner(debateId: string) {
         })
 
         try {
-          const { content, error } = await generateCompletion(modelId, prompt)
+          const data = await generateCompletion({
+            model: modelId,
+            messages: [{ role: "user", content: prompt }],
+          })
 
-          if (error) {
-            updateResponse(debateId, modelId, {
-              status: "error",
-              error: error,
-            })
-            return
-          }
+          const content = data.choices?.[0]?.message?.content || ""
 
-          // Parse ranking
           const rankingMatch = content.match(/RANKING:\s*(\d)/i)
           let ranking = 0
           let cleanContent = content
 
           if (rankingMatch) {
             ranking = parseInt(rankingMatch[1], 10)
-            // Remove the ranking line from content
             cleanContent = content.replace(/RANKING:\s*\d\s*/i, "").trim()
           }
 
@@ -55,32 +52,40 @@ export function useDebateRunner(debateId: string) {
             ranking,
             status: "completed",
           })
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Unknown error"
           updateResponse(debateId, modelId, {
             status: "error",
-            error: err.message || "Unknown error",
+            error: message,
           })
         }
       })
 
       await Promise.all(promises)
 
-      // Get the latest state of the debate to save it
       const finalDebate = useDebateStore
         .getState()
         .debates.find((d) => d.id === debateId)
       if (finalDebate) {
-        await saveDebate({
-          id: debateId,
-          topic: finalDebate.topic,
-          responses: finalDebate.responses,
-        })
+        try {
+          const convexId = await createDebate({
+            topic: finalDebate.topic,
+            responses: finalDebate.responses,
+          })
+          updateDebate(debateId, { id: convexId, status: "completed" })
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Failed to save debate"
+          console.error("Failed to persist debate:", message)
+          updateDebate(debateId, { status: "completed" })
+        }
+      } else {
+        updateDebate(debateId, { status: "completed" })
       }
 
-      updateDebate(debateId, { status: "completed" })
       runningRef.current = false
     }
 
     runDebate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debateId, debate?.status])
 }

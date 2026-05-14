@@ -1,137 +1,74 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { useParams, Link } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
-import type { Debate } from "../store/useDebateStore"
+import type { Debate, DebateResponse } from "../store/useDebateStore"
 import { useDebateStore } from "../store/useDebateStore"
-import type { DebateFromApi } from "../lib/openrouter"
-import { fetchDebateById } from "../lib/openrouter"
+import { useQuery } from "convex/react"
+import { api } from "../../../backend/convex/_generated/api"
 import { useDebateRunner } from "../hooks/useDebateRunner"
 import { useModels } from "../hooks/useModels"
+import { useConvexAuth } from "@convex-dev/auth/react"
 import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react"
 import { motion } from "framer-motion"
 import { cn } from "../lib/utils"
 
-function convertApiDebateToDebate(apiDebate: DebateFromApi): Debate {
-  const response =
-    typeof apiDebate.response === "string"
-      ? JSON.parse(apiDebate.response)
-      : apiDebate.response
-
-  // Check if it's the new format (Array of responses)
-  if (Array.isArray(response)) {
-    const responses = response as Debate["responses"]
-    const modelIds = responses.map((r) => r.modelId)
-    // Deduplicate modelIds
-    const uniqueModelIds = [...new Set(modelIds)]
-
-    return {
-      id: String(apiDebate.id),
-      topic: apiDebate.topic || "Unknown Topic",
-      modelIds: uniqueModelIds,
-      responses,
-      status: "completed",
-      createdAt: new Date(apiDebate.created_at).getTime(),
-    }
-  }
-
-  const modelIds: string[] = []
-  const responses: Debate["responses"] = []
-
-  if (response && response.choices && response.choices.length > 0) {
-    const modelId = response.model || "unknown"
-    if (!modelIds.includes(modelId)) {
-      modelIds.push(modelId)
-    }
-
-    response.choices.forEach((choice: { message?: { content?: string } }) => {
-      const content = choice.message?.content || ""
-      const rankingMatch = content.match(/RANKING:\s*(\d)/i)
-      let ranking = 0
-      let cleanContent = content
-
-      if (rankingMatch) {
-        ranking = parseInt(rankingMatch[1], 10)
-        cleanContent = content.replace(/RANKING:\s*\d\s*/i, "").trim()
-      }
-
-      responses.push({
-        modelId,
-        content: cleanContent,
-        ranking,
-        status: "completed",
-      })
-    })
-  }
-
-  return {
-    id: String(apiDebate.id),
-    topic: apiDebate.topic || "Unknown Topic",
-    modelIds,
-    responses,
-    status: "completed",
-    createdAt: new Date(apiDebate.created_at).getTime(),
-  }
-}
-
 export default function Debate() {
   const { id } = useParams<{ id: string }>()
   const { models } = useModels()
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true"
+  const { isAuthenticated } = useConvexAuth()
   const { setCurrentDebate, currentDebate } = useDebateStore()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+
+  const isLocalUuid = !!(
+    id &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+  )
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const convexDoc = useQuery(
+    api.queries.getDebate,
+    isLocalUuid ? "skip" : ({ id: (id ?? "") } as any)
+  )
+
+  const debateFromConvex = useMemo((): Debate | null => {
+    if (!convexDoc || !id || isLocalUuid) return null
+    const modelIds = convexDoc.responses.map((r: DebateResponse) => r.modelId)
+    return {
+      id: convexDoc._id,
+      topic: convexDoc.topic,
+      modelIds: [...new Set(modelIds)],
+      responses: convexDoc.responses.map((r: DebateResponse) => ({
+        modelId: r.modelId,
+        content: r.content,
+        ranking: r.ranking,
+        status: r.status,
+        error: r.error,
+      })),
+      status: "completed",
+      createdAt: convexDoc._creationTime,
+    }
+  }, [convexDoc, id, isLocalUuid])
 
   useEffect(() => {
-    setLoading(true)
-    // First check if it's a local debate (UUID format)
-    if (
-      id &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-    ) {
+    if (isLocalUuid && id) {
       const localDebate = useDebateStore
         .getState()
         .debates.find((d) => d.id === id)
       if (localDebate) {
         setCurrentDebate(localDebate)
-        setLoading(false)
         return
       }
     }
-
-    // If not found locally, try to load from backend
-    const loadDebate = async () => {
-      if (!id) return
-
-      setLoading(true)
-      setError(null)
-
-      try {
-        // Fetch from backend
-        const apiDebate = await fetchDebateById(id)
-        if (apiDebate) {
-          const debate = convertApiDebateToDebate(apiDebate)
-          setCurrentDebate(debate)
-        } else {
-          setError("Debate not found")
-        }
-      } catch (err) {
-        console.error("Failed to load debate:", err)
-        setError("Failed to load debate")
-      } finally {
-        setLoading(false)
-      }
+    if (debateFromConvex) {
+      setCurrentDebate(debateFromConvex)
     }
+  }, [id, isLocalUuid, debateFromConvex, setCurrentDebate])
 
-    loadDebate()
-  }, [id, setCurrentDebate])
+  useDebateRunner(isLocalUuid ? (id ?? "") : "")
 
-  // Run the debate logic for local debates (not yet in DB)
-  useDebateRunner(id || "")
-
-  // Check if we're viewing a different debate than what's in the store
   const isDebateMismatch = currentDebate && currentDebate.id !== id
+  const isLocalLoading = isLocalUuid && !currentDebate
 
-  if (loading || isDebateMismatch) {
+  if (isLocalLoading || isDebateMismatch) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -140,7 +77,7 @@ export default function Debate() {
     )
   }
 
-  if (error || !currentDebate) {
+  if (!currentDebate) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <h2 className="text-2xl font-bold">Debate Not Found</h2>

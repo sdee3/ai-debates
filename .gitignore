@@ -24,5 +24,10 @@ dist-ssr
 *.sw?
 .sst
 .opencode
+.kilo
+.playwright-mcp
 
-.env
+# Convex generated
+backend/convex/_generated/
+
+.env*

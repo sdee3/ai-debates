@@ -1,7 +1,10 @@
+import { useAction } from "convex/react"
+import type { OpenRouterModel } from "../lib/openrouter"
+import { api } from "../../../backend/convex/_generated/api"
 import { useState, useEffect } from "react"
-import { fetchModels, type OpenRouterModel } from "../lib/openrouter"
 
 export function useModels() {
+  const fetchModels = useAction(api.actions.fetchModels)
   const [models, setModels] = useState<OpenRouterModel[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -16,7 +19,7 @@ export function useModels() {
           setModels(data)
           setLoading(false)
         }
-      } catch (err) {
+      } catch {
         if (mounted) {
           setError("Failed to load models")
           setLoading(false)
@@ -29,7 +32,7 @@ export function useModels() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [fetchModels])
 
   return { models, loading, error }
 }
