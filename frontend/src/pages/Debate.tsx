@@ -53,7 +53,11 @@ export default function Debate() {
 
   const showNotFound = !currentDebate && doc !== undefined
 
-  const seoTitle = currentDebate ? `Debate: ${currentDebate.topic}` : showNotFound ? "Debate Not Found" : "Loading Debate"
+  const seoTitle = currentDebate
+    ? currentDebate.topic
+    : showNotFound
+      ? "Debate Not Found"
+      : "Loading Debate"
 
   const seoDescription = useMemo(() => {
     if (!currentDebate) return "Watch AI models debate and rank their agreement on this topic."

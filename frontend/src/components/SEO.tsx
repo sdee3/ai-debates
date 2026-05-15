@@ -11,6 +11,7 @@ interface SEOProps {
   canonical?: string
   noIndex?: boolean
   ogType?: string
+  ogImage?: string
 }
 
 export function SEO({
@@ -19,6 +20,7 @@ export function SEO({
   canonical,
   noIndex = false,
   ogType = "website",
+  ogImage,
 }: SEOProps) {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME
   const canonicalUrl = canonical ? `${SITE_URL}${canonical}` : SITE_URL
@@ -39,10 +41,12 @@ export function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:type" content={ogType} />
+      {ogImage && <meta property="og:image" content={ogImage} />}
 
-      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
+      {ogImage && <meta name="twitter:image" content={ogImage} />}
     </Helmet>
   )
 }

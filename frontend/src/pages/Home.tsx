@@ -4,6 +4,7 @@ import { useQuery, usePaginatedQuery, useMutation } from "convex/react"
 import { api } from "@convex-api"
 import { HeroSection } from "../components/HeroSection"
 import { DebateList } from "../components/DebateList"
+import { SEO } from "../components/SEO"
 import { Loader2 } from "lucide-react"
 
 interface ConvexDebateDoc {
@@ -84,6 +85,10 @@ export default function Home() {
   if (!showAll && latestDebates === undefined) {
     return (
       <div className="flex flex-col items-center min-h-[80vh] space-y-24 py-12">
+        <SEO
+          title="Home"
+          description="Watch multiple AI language models debate any topic, then rank their agreement. Create public or private debates."
+        />
         <HeroSection />
         <div className="flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -95,6 +100,10 @@ export default function Home() {
   if (showAll && status === "LoadingFirstPage") {
     return (
       <div className="flex flex-col items-center min-h-[80vh] space-y-24 py-12">
+        <SEO
+          title="All Debates"
+          description="Browse all AI debates. Watch multiple AI language models debate any topic and rank their agreement."
+        />
         <HeroSection />
         <div className="flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -105,6 +114,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center min-h-[80vh] space-y-24 py-12">
+      <SEO
+        title={showAll ? "All Debates" : "Home"}
+        description="Watch multiple AI language models debate any topic, then rank their agreement. Create public or private debates with models like GPT, Claude, Gemini, and more."
+      />
       <HeroSection />
       <DebateList
         debates={debates}

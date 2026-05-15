@@ -3,14 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "convex dev",
+    "dev": "convex dev --typecheck=disable",
     "typecheck": "convex typecheck"
   },
   "dependencies": {
+    "@auth/core": "^0.37.0",
     "@convex-dev/auth": "^0.0.92",
     "convex": "^1.38.0"
   },
   "devDependencies": {
-    "@types/node": "^25.7.0"
+    "@types/node": "^25.7.0",
+    "typescript": "^5.8.0"
   }
 }

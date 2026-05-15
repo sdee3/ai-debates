@@ -16,6 +16,10 @@ echo "=== Uploading dist/ to s3://${BUCKET} ==="
 aws s3 sync "${DIST_DIR}" "s3://${BUCKET}" --delete --region "${REGION}"
 
 echo ""
+echo "=== Deploying Lambda@Edge SEO router ==="
+"${SCRIPT_DIR}/lambda-edge/deploy.sh"
+
+echo ""
 echo "=== Invalidating CloudFront cache ==="
 INVALIDATION_ID=$(aws cloudfront create-invalidation \
   --distribution-id "${DISTRIBUTION_ID}" \

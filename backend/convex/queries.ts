@@ -49,3 +49,14 @@ export const viewer = query({
     return await getAuthUserId(ctx);
   },
 });
+
+export const listPublicDebates = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("debates")
+      .filter((q) => q.eq(q.field("isPublic"), true))
+      .order("desc")
+      .collect();
+  },
+});
