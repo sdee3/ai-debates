@@ -6,6 +6,7 @@ import Home from "./pages/Home"
 import CreateDebate from "./pages/CreateDebate"
 import Debate from "./pages/Debate"
 import Credits from "./pages/Credits"
+import NotFound from "./pages/NotFound"
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             />
             <Route path="/debate/:id" element={<Debate />} />
             <Route path="/credits" element={<Credits />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <ReloadPrompt />
