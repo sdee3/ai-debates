@@ -170,7 +170,11 @@ export const createDebateWithSummary = action({
 
 export const fetchModels = action({
   handler: async () => {
-    const response = await fetch("https://openrouter.ai/api/v1/models")
+    const apiKey = process.env.OPENROUTER_API_KEY
+    if (!apiKey) throw new Error("OPENROUTER_API_KEY not set")
+    const response = await fetch("https://openrouter.ai/api/v1/models/user", {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    })
     if (!response.ok) throw new Error("Failed to fetch models")
     const data = await response.json()
     return data.data
