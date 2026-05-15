@@ -39,7 +39,7 @@ export default function Home() {
   const deleteDebateMutation = useMutation(api.mutations.deleteDebate)
   const { results, status, loadMore } = usePaginatedQuery(
     api.queries.listDebates,
-    { paginationOpts: { numItems: 20 } },
+    {},
     { initialNumItems: 20 }
   )
 

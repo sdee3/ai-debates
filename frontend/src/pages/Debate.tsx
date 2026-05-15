@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import type { Debate, DebateResponse } from "../store/useDebateStore"
@@ -48,6 +48,8 @@ export default function Debate() {
     }
   }, [convexDoc, id, isLocalUuid])
 
+  const [localLookupDone, setLocalLookupDone] = useState(false)
+
   useEffect(() => {
     if (isLocalUuid && id) {
       const localDebate = useDebateStore
@@ -55,8 +57,9 @@ export default function Debate() {
         .debates.find((d) => d.id === id)
       if (localDebate) {
         setCurrentDebate(localDebate)
-        return
       }
+      setLocalLookupDone(true)
+      return
     }
     if (debateFromConvex) {
       setCurrentDebate(debateFromConvex)
@@ -65,10 +68,14 @@ export default function Debate() {
 
   useDebateRunner(isLocalUuid ? (id ?? "") : "")
 
-  const isDebateMismatch = currentDebate && currentDebate.id !== id
-  const isLocalLoading = isLocalUuid && !currentDebate
+  const showLoading =
+    (isLocalUuid && !currentDebate && !localLookupDone) ||
+    (!isLocalUuid && !currentDebate && convexDoc === undefined)
 
-  if (isLocalLoading || isDebateMismatch) {
+  const showNotFound =
+    !currentDebate && (isLocalUuid ? localLookupDone : convexDoc !== undefined)
+
+  if (showLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -77,7 +84,7 @@ export default function Debate() {
     )
   }
 
-  if (!currentDebate) {
+  if (showNotFound) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <h2 className="text-2xl font-bold">Debate Not Found</h2>
@@ -86,6 +93,10 @@ export default function Debate() {
         </Link>
       </div>
     )
+  }
+
+  if (!currentDebate) {
+    return null
   }
 
   const getModelName = (modelId: string) => {

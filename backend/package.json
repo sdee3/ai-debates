@@ -7,7 +7,10 @@
     "typecheck": "convex typecheck"
   },
   "dependencies": {
-    "convex": "^1.38.0",
-    "@convex-dev/auth": "^0.0.92"
+    "@convex-dev/auth": "^0.0.92",
+    "convex": "^1.38.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.7.0"
   }
 }

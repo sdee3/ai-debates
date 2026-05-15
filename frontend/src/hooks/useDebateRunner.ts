@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { useNavigate } from "react-router-dom"
 import { useAction, useMutation } from "convex/react"
 import { api } from "../../../backend/convex/_generated/api"
 import { useDebateStore } from "../store/useDebateStore"
@@ -6,6 +7,7 @@ import { useDebateStore } from "../store/useDebateStore"
 export function useDebateRunner(debateId: string) {
   const generateCompletion = useAction(api.actions.generateCompletion)
   const createDebate = useMutation(api.mutations.createDebate)
+  const navigate = useNavigate()
   const { getDebate, updateDebate, addResponse, updateResponse } =
     useDebateStore()
   const debate = getDebate(debateId)
@@ -72,7 +74,9 @@ export function useDebateRunner(debateId: string) {
             topic: finalDebate.topic,
             responses: finalDebate.responses,
           })
-          updateDebate(debateId, { id: convexId, status: "completed" })
+          updateDebate(debateId, { status: "completed" })
+          navigate(`/debate/${convexId}`, { replace: true })
+          return
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "Failed to save debate"
           console.error("Failed to persist debate:", message)
