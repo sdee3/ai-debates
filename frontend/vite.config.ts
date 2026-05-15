@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "robots.txt", "sitemap.xml"],
       pwaAssets: {
-        image: "public/pwa-icon.svg",
+        image: "public/favicon.svg",
         preset: "minimal-2023",
         includeHtmlHeadLinks: true,
         overrideManifestIcons: true,

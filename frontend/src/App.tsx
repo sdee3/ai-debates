@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { AuthGuard } from "./components/AuthGuard"
 import Header from "./components/Header"
 import ReloadPrompt from "./components/ReloadPrompt"
+import { ErrorBoundary } from "./components/ErrorBoundary"
 import Home from "./pages/Home"
 import CreateDebate from "./pages/CreateDebate"
 import Debate from "./pages/Debate"
@@ -24,7 +25,7 @@ function App() {
                 </AuthGuard>
               }
             />
-            <Route path="/debate/:id" element={<Debate />} />
+            <Route path="/debate/:id" element={<ErrorBoundary fallback={<NotFound />}><Debate /></ErrorBoundary>} />
             <Route path="/credits" element={<Credits />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
