@@ -20,41 +20,42 @@ export function DebateCard({ debate, onDelete }: DebateCardProps) {
       >
         <X className="w-4 h-4" />
       </button>
-      <div className="flex flex-col space-y-2 w-full">
-        <div className="flex justify-between items-center pr-8">
-          <span className="font-medium text-lg line-clamp-1 group-hover:text-primary transition-colors">
-            {debate.topic}
-          </span>
-        </div>
-          <div className="flex items-center text-xs text-muted-foreground space-x-3">
+      <div className="flex flex-col space-y-2 w-full pr-8">
+        <span className="font-medium text-lg group-hover:text-primary transition-colors">
+          {debate.topic}
+        </span>
+        <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
             <div className="flex items-center">
               <Clock className="w-3 h-3 mr-1" />
               {new Date(debate.createdAt).toISOString().split("T")[0]}
             </div>
-            <div className="w-1 h-1 rounded-full bg-border" />
+            <span className="w-1 h-1 rounded-full bg-border shrink-0" />
             <span>{debate.modelIds.length} Models</span>
-            <div className="w-1 h-1 rounded-full bg-border" />
+          </div>
+          <div className="flex items-center gap-1.5">
             <span
-            className={`capitalize px-2 py-0.5 rounded-full text-xs font-medium ${
-              debate.status === "completed"
-                ? "bg-green-500/10 text-green-500"
-                : "bg-yellow-500/10 text-yellow-500"
-            }`}
-          >
-            {debate.status}
-          </span>
-          <div className="w-1 h-1 rounded-full bg-border" />
-          {debate.isPublic ? (
-            <span className="inline-flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2.5 py-1 rounded-full">
-              <Globe className="w-3 h-3 mr-1" />
-              Public
+              className={`capitalize px-2 py-0.5 rounded-full text-xs font-medium ${
+                debate.status === "completed"
+                  ? "bg-green-500/10 text-green-500"
+                  : "bg-yellow-500/10 text-yellow-500"
+              }`}
+            >
+              {debate.status}
             </span>
-          ) : (
-            <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-secondary/50 px-2.5 py-1 rounded-full">
-              <Lock className="w-3 h-3 mr-1" />
-              Private
-            </span>
-          )}
+            <span className="w-1 h-1 rounded-full bg-border shrink-0" />
+            {debate.isPublic ? (
+              <span className="inline-flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2.5 py-1 rounded-full">
+                <Globe className="w-3 h-3 mr-1" />
+                Public
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-secondary/50 px-2.5 py-1 rounded-full">
+                <Lock className="w-3 h-3 mr-1" />
+                Private
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </Link>

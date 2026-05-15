@@ -17,6 +17,7 @@ export default function Debate() {
   const { isAuthenticated } = useConvexAuth()
   const { currentDebate } = useDebateStore()
   const [copied, setCopied] = useState(false)
+  const [expandedResponses, setExpandedResponses] = useState<Record<string, boolean>>({})
 
   const viewerId = useQuery(api.queries.viewer)
   const togglePublic = useMutation(api.mutations.togglePublicDebate)
@@ -223,9 +224,22 @@ export default function Debate() {
                       {getRankingLabel(response?.ranking || 0)}
                     </span>
                   </div>
-                  <div className="flex-1 text-sm leading-relaxed text-muted-foreground overflow-y-auto prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-headings:text-foreground prose-a:text-primary scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent pr-2">
+                  <div className={cn(
+                    "text-sm leading-relaxed text-muted-foreground prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-headings:text-foreground prose-a:text-primary scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent pr-2",
+                    expandedResponses[modelId]
+                      ? "flex-1 overflow-y-auto"
+                      : "max-h-[400px] overflow-hidden"
+                  )}>
                     <ReactMarkdown>{response?.content || ""}</ReactMarkdown>
                   </div>
+                  {!expandedResponses[modelId] && (
+                    <button
+                      onClick={() => setExpandedResponses(prev => ({ ...prev, [modelId]: true }))}
+                      className="w-full mt-2 py-2 text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors text-center cursor-pointer"
+                    >
+                      Show full response
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>
