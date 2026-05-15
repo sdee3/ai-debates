@@ -34,10 +34,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
     setError("")
 
     try {
-      const flow = isSignUp ? "signUp" : "signIn"
-      await signIn("password", { email, password, flow })
+      const formData = new FormData(e.currentTarget as HTMLFormElement)
+      const email = (formData.get("email") as string).trim()
+      formData.set("email", email)
+      formData.set("flow", isSignUp ? "signUp" : "signIn")
+      await signIn("password", formData)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Authentication failed"
+      const message =
+        err instanceof Error ? err.message : "Authentication failed"
       setError(message)
     } finally {
       setSubmitting(false)
@@ -69,6 +73,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                 name="email"
                 type="email"
                 autoComplete="email"
+                autoCapitalize="off"
                 required
                 className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
                 placeholder="Email"
@@ -99,7 +104,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center bg-red-500/10 py-2 rounded-lg">{error}</div>
+            <div className="text-red-500 text-sm text-center bg-red-500/10 py-2 rounded-lg">
+              {error}
+            </div>
           )}
 
           <button
@@ -107,11 +114,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
             disabled={submitting}
             className="w-full py-3 text-lg font-medium text-white transition-all duration-200 bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
           >
-            {submitting
-              ? "Please wait..."
-              : isSignUp
-                ? "Sign Up"
-                : "Sign In"}
+            {submitting ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
           </button>
 
           <div className="text-center">
