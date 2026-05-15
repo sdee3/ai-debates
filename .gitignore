@@ -26,6 +26,7 @@ dist-ssr
 .opencode
 .kilo
 .playwright-mcp
+.security
 
 # Convex generated
 backend/convex/_generated/
