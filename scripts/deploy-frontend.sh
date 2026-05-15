@@ -16,6 +16,10 @@ echo "=== Uploading dist/ to s3://${BUCKET} ==="
 aws s3 sync "${DIST_DIR}" "s3://${BUCKET}" --delete --region "${REGION}"
 
 echo ""
+echo "=== Verifying Lambda@Edge code integrity ==="
+EXPECTED_HASH=$(sha256sum "${SCRIPT_DIR}/lambda-edge/seo-router.js" | cut -d' ' -f1)
+echo "SEO router SHA-256: ${EXPECTED_HASH}"
+
 echo "=== Deploying Lambda@Edge SEO router ==="
 "${SCRIPT_DIR}/lambda-edge/deploy.sh"
 

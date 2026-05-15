@@ -50,6 +50,21 @@ export const viewer = query({
   },
 });
 
+export const getDebateBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, args) => {
+    const debate = await ctx.db
+      .query("debates")
+      .filter((q) => q.eq(q.field("slug"), args.slug))
+      .first()
+    if (!debate) return null
+    if (debate.isPublic ?? false) return debate
+    const userId = await getAuthUserId(ctx)
+    if (userId && debate.userId === userId) return debate
+    return null
+  },
+})
+
 export const listPublicDebates = query({
   args: {},
   handler: async (ctx) => {

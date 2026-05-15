@@ -25,7 +25,7 @@ function App() {
                 </AuthGuard>
               }
             />
-            <Route path="/debate/:id" element={<ErrorBoundary fallback={<NotFound />}><Debate /></ErrorBoundary>} />
+            <Route path="/debate/:slugOrId" element={<ErrorBoundary fallback={<NotFound />}><Debate /></ErrorBoundary>} />
             <Route path="/credits" element={<Credits />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

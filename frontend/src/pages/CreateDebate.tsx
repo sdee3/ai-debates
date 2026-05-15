@@ -47,12 +47,12 @@ export default function CreateDebate() {
 
     setCreating(true)
     try {
-      const id = await createDebate({
+      const result = await createDebate({
         topic,
         modelIds: selectedModels,
         isPublic,
       })
-      navigate(`/debate/${id}`)
+      navigate(`/debate/${result.slug}`)
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Failed to create debate"
@@ -106,10 +106,13 @@ export default function CreateDebate() {
           <textarea
             id="topic"
             value={topic}
-            onChange={(e) => setTopic(e.target.value)}
+            onChange={(e) => setTopic(e.target.value.slice(0, 5000))}
             placeholder="e.g., Artificial intelligence is a threat to humanity"
             className="w-full min-h-[120px] p-4 bg-background/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-y placeholder:text-muted-foreground/50"
           />
+          <div className="text-xs text-muted-foreground text-right">
+            {topic.length}/5000
+          </div>
         </div>
 
         <div className="space-y-3">

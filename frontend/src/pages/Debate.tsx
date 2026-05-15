@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
+import rehypeSanitize from "rehype-sanitize"
 import { useDebateStore } from "../store/useDebateStore"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@convex-api"
@@ -13,7 +14,7 @@ import { useState, useMemo } from "react"
 import { SEO } from "../components/SEO"
 
 export default function Debate() {
-  const { id } = useParams<{ id: string }>()
+  const { slugOrId } = useParams<{ slugOrId: string }>()
   const { models } = useModels()
   const { isAuthenticated } = useConvexAuth()
   const { currentDebate } = useDebateStore()
@@ -25,19 +26,27 @@ export default function Debate() {
   const togglePublic = useMutation(api.mutations.togglePublicDebate)
   const deleteDebate = useMutation(api.mutations.deleteDebate)
 
-  const doc = useQuery(
-    api.queries.getDebate,
-    id ? ({ id: id } as any) : "skip"
+  const debateBySlug = useQuery(
+    api.queries.getDebateBySlug,
+    slugOrId ? { slug: slugOrId } : "skip"
   )
 
-  useDebateRunner(id ?? null)
+  const debateById = useQuery(
+    api.queries.getDebate,
+    slugOrId && debateBySlug === null ? ({ id: slugOrId } as any) : "skip"
+  )
+
+  const doc = debateBySlug !== undefined ? (debateBySlug ?? debateById) : undefined
+  const resolvedId = doc?._id ?? null
+
+  useDebateRunner(resolvedId)
 
   const isOwner = currentDebate && viewerId && currentDebate.userId === viewerId
 
   const handleTogglePublic = async () => {
-    if (!id) return
+    if (!resolvedId) return
     try {
-      await togglePublic({ id: id as any })
+      await togglePublic({ id: resolvedId as any })
     } catch (err) {
       console.error("Failed to toggle visibility:", err)
     }
@@ -69,7 +78,7 @@ export default function Debate() {
     return `AI models debate "${currentDebate.topic}". See how ${modelNames || "multiple AI models"} rank their agreement on this topic.`
   }, [currentDebate, models])
 
-  const canonicalPath = id ? `/debate/${id}` : undefined
+  const canonicalPath = slugOrId ? `/debate/${slugOrId}` : undefined
 
   if (showLoading) {
     return (
@@ -272,7 +281,7 @@ export default function Debate() {
                       ? "flex-1 overflow-y-auto"
                       : "max-h-[400px] overflow-hidden"
                   )}>
-                    <ReactMarkdown>{response?.content || ""}</ReactMarkdown>
+                    <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{response?.content || ""}</ReactMarkdown>
                   </div>
                   {!expandedResponses[modelId] && (
                     <button
@@ -296,7 +305,7 @@ export default function Debate() {
             onClick={async () => {
               if (window.confirm("Are you sure you want to delete this debate?")) {
                 try {
-                  await deleteDebate({ id: id as any })
+                  await deleteDebate({ id: resolvedId as any })
                   navigate("/")
                 } catch (err) {
                   console.error("Failed to delete debate:", err)

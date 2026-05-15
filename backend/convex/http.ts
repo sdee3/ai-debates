@@ -10,6 +10,34 @@ const http = httpRouter();
 // Auth routes (OAuth callbacks)
 auth.addHttpRoutes(http);
 
+// Rate limit check for sign-in attempts (5 per hour per IP)
+http.route({
+  path: "/api/check-rate-limit",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded?.split(",")[0]?.trim() || "unknown";
+
+    try {
+      await ctx.runMutation(api.rateLimit.recordIpAttempt, {
+        ip,
+        action: "signIn",
+      });
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Too many sign-in attempts. Please try again later.";
+      return new Response(JSON.stringify({ ok: false, error: message }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  }),
+});
+
 /**
  * SEO prerendering for debate pages.
  * Returns HTML with debate-specific Open Graph and Twitter Card meta tags.
@@ -81,6 +109,7 @@ http.route({
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "public, max-age=300, stale-while-revalidate=86400",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'",
       },
     });
   }),
@@ -130,6 +159,7 @@ ${urlEntries}
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "public, max-age=300, stale-while-revalidate=86400",
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'",
       },
     });
   }),
@@ -182,6 +212,7 @@ function debateNotFoundHtml(debateId: string): Response {
     status: 404,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'",
     },
   });
 }

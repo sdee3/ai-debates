@@ -38,6 +38,20 @@ export function AuthGuard({ children }: AuthGuardProps) {
       const email = (formData.get("email") as string).trim()
       formData.set("email", email)
       formData.set("flow", isSignUp ? "signUp" : "signIn")
+
+      if (!isSignUp) {
+        const actionsUrl = import.meta.env.VITE_CONVEX_ACTIONS_URL
+        if (actionsUrl) {
+          const res = await fetch(`${actionsUrl}/api/check-rate-limit`, {
+            method: "POST",
+          })
+          if (!res.ok) {
+            const body = await res.json()
+            throw new Error(body.error || "Too many sign-in attempts. Please try again later.")
+          }
+        }
+      }
+
       await signIn("password", formData)
     } catch (err: unknown) {
       const message =

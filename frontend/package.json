@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["sharp"]
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
   },
   "dependencies": {
     "@convex-dev/auth": "0.0.92",
@@ -24,6 +26,7 @@
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.11.0",
+    "rehype-sanitize": "^6.0.0",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.9"
   },

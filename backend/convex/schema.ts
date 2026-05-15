@@ -8,6 +8,7 @@ export default defineSchema({
     userId: v.string(),
     topic: v.string(),
     fullTopic: v.optional(v.string()),
+    slug: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
     responses: v.array(
       v.object({
@@ -24,4 +25,14 @@ export default defineSchema({
       })
     ),
   }).index("by_user", ["userId"]),
+  rateLimits: defineTable({
+    userId: v.string(),
+    action: v.string(),
+    lastInvokedAt: v.number(),
+  }).index("by_user_action", ["userId", "action"]),
+  ipRateLimits: defineTable({
+    ip: v.string(),
+    action: v.string(),
+    timestamps: v.array(v.number()),
+  }).index("by_ip_action", ["ip", "action"]),
 });

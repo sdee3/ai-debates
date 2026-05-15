@@ -199,4 +199,13 @@ echo "Version:  ${LAMBDA_VERSION}"
 echo "ARN:      ${LAMBDA_VERSION_ARN}"
 echo "CloudFront Distribution: ${DISTRIBUTION_ID}"
 echo ""
+# Verify function state after update
+echo "Verifying Lambda function state..."
+FUNCTION_STATE=$(aws lambda get-function \
+  --function-name "${LAMBDA_FUNCTION_NAME}" \
+  --region "${REGION}" \
+  --query 'Configuration.State' \
+  --output text)
+echo "Function state: ${FUNCTION_STATE}"
+
 echo "Note: CloudFront distribution updates can take 5-15 minutes to propagate globally."
