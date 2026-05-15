@@ -11,7 +11,7 @@ export const generateCompletion = action({
     model: v.string(),
     messages: v.array(v.object({ role: v.string(), content: v.string() })),
   },
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) throw new Error("OPENROUTER_API_KEY not set");
 

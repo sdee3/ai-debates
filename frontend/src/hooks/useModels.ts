@@ -1,6 +1,6 @@
 import { useAction } from "convex/react"
 import type { OpenRouterModel } from "../lib/openrouter"
-import { api } from "../../../backend/convex/_generated/api"
+import { api } from "@convex-api"
 import { useState, useEffect } from "react"
 
 export function useModels() {

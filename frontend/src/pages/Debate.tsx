@@ -1,79 +1,53 @@
-import { useEffect, useMemo, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
-import type { Debate, DebateResponse } from "../store/useDebateStore"
 import { useDebateStore } from "../store/useDebateStore"
-import { useQuery } from "convex/react"
-import { api } from "../../../backend/convex/_generated/api"
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@convex-api"
 import { useDebateRunner } from "../hooks/useDebateRunner"
 import { useModels } from "../hooks/useModels"
 import { useConvexAuth } from "@convex-dev/auth/react"
-import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Loader2, AlertTriangle, Globe, Lock, Check, Copy } from "lucide-react"
 import { motion } from "framer-motion"
 import { cn } from "../lib/utils"
+import { useState } from "react"
 
 export default function Debate() {
   const { id } = useParams<{ id: string }>()
   const { models } = useModels()
   const { isAuthenticated } = useConvexAuth()
-  const { setCurrentDebate, currentDebate } = useDebateStore()
+  const { currentDebate } = useDebateStore()
+  const [copied, setCopied] = useState(false)
 
-  const isLocalUuid = !!(
-    id &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-  )
+  const viewerId = useQuery(api.queries.viewer)
+  const togglePublic = useMutation(api.mutations.togglePublicDebate)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const convexDoc = useQuery(
+  const doc = useQuery(
     api.queries.getDebate,
-    isLocalUuid ? "skip" : ({ id: (id ?? "") } as any)
+    id ? ({ id: id } as any) : "skip"
   )
 
-  const debateFromConvex = useMemo((): Debate | null => {
-    if (!convexDoc || !id || isLocalUuid) return null
-    const modelIds = convexDoc.responses.map((r: DebateResponse) => r.modelId)
-    return {
-      id: convexDoc._id,
-      topic: convexDoc.topic,
-      modelIds: [...new Set(modelIds)],
-      responses: convexDoc.responses.map((r: DebateResponse) => ({
-        modelId: r.modelId,
-        content: r.content,
-        ranking: r.ranking,
-        status: r.status,
-        error: r.error,
-      })),
-      status: "completed",
-      createdAt: convexDoc._creationTime,
+  useDebateRunner(id ?? null)
+
+  const isOwner = currentDebate && viewerId && currentDebate.userId === viewerId
+
+  const handleTogglePublic = async () => {
+    if (!id) return
+    try {
+      await togglePublic({ id: id as any })
+    } catch (err) {
+      console.error("Failed to toggle visibility:", err)
     }
-  }, [convexDoc, id, isLocalUuid])
+  }
 
-  const [localLookupDone, setLocalLookupDone] = useState(false)
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
-  useEffect(() => {
-    if (isLocalUuid && id) {
-      const localDebate = useDebateStore
-        .getState()
-        .debates.find((d) => d.id === id)
-      if (localDebate) {
-        setCurrentDebate(localDebate)
-      }
-      setLocalLookupDone(true)
-      return
-    }
-    if (debateFromConvex) {
-      setCurrentDebate(debateFromConvex)
-    }
-  }, [id, isLocalUuid, debateFromConvex, setCurrentDebate])
+  const showLoading = !currentDebate && doc === undefined
 
-  useDebateRunner(isLocalUuid ? (id ?? "") : "")
-
-  const showLoading =
-    (isLocalUuid && !currentDebate && !localLookupDone) ||
-    (!isLocalUuid && !currentDebate && convexDoc === undefined)
-
-  const showNotFound =
-    !currentDebate && (isLocalUuid ? localLookupDone : convexDoc !== undefined)
+  const showNotFound = !currentDebate && doc !== undefined
 
   if (showLoading) {
     return (
@@ -125,18 +99,68 @@ export default function Debate() {
           Log in to create your own thread and let AI models debate
         </div>
       )}
-      <div className="flex items-center space-x-4">
-        {isAuthenticated && (
-          <Link
-            to="/"
-            className="p-2 rounded-full hover:bg-secondary transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-        )}
-        <h1 className="text-2xl font-bold leading-tight">
-          {currentDebate.topic}
-        </h1>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-4">
+          {isAuthenticated && (
+            <Link
+              to="/"
+              className="p-2 rounded-full hover:bg-secondary transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+          )}
+          <h1 className="text-2xl font-bold leading-tight">
+            {currentDebate.topic}
+          </h1>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          {currentDebate.isPublic ? (
+            <span className="inline-flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2.5 py-1 rounded-full">
+              <Globe className="w-3 h-3 mr-1" />
+              Public
+            </span>
+          ) : (
+            <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-secondary/50 px-2.5 py-1 rounded-full">
+              <Lock className="w-3 h-3 mr-1" />
+              Private
+            </span>
+          )}
+
+          {isOwner && (
+            <button
+              onClick={handleTogglePublic}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                currentDebate.isPublic ? "bg-green-500" : "bg-muted-foreground/30"
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                  currentDebate.isPublic ? "translate-x-[18px]" : "translate-x-1"
+                }`}
+              />
+            </button>
+          )}
+
+          {currentDebate.isPublic && (
+            <button
+              onClick={handleCopyLink}
+              className="inline-flex items-center text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-full transition-colors"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3 h-3 mr-1" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3 mr-1" />
+                  Copy Link
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -14,6 +14,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(false)
 
   if (isLoading) {
     return (
@@ -33,7 +34,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
     setError("")
 
     try {
-      await signIn("password", { email, password, flow: "signIn" })
+      const flow = isSignUp ? "signUp" : "signIn"
+      await signIn("password", { email, password, flow })
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Authentication failed"
       setError(message)
@@ -47,10 +49,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-bold tracking-tight">
-            Sign In
+            {isSignUp ? "Sign Up" : "Sign In"}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in with your email and password.
+            {isSignUp
+              ? "Create an account with your email and password."
+              : "Sign in with your email and password."}
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -84,7 +88,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete={isSignUp ? "new-password" : "current-password"}
                 required
                 className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
                 placeholder="Password"
@@ -103,8 +107,27 @@ export function AuthGuard({ children }: AuthGuardProps) {
             disabled={submitting}
             className="w-full py-3 text-lg font-medium text-white transition-all duration-200 bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-50"
           >
-            {submitting ? "Please wait..." : "Sign In"}
+            {submitting
+              ? "Please wait..."
+              : isSignUp
+                ? "Sign Up"
+                : "Sign In"}
           </button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp)
+                setError("")
+              }}
+              className="text-sm text-primary hover:underline"
+            >
+              {isSignUp
+                ? "Already have an account? Sign In"
+                : "Don't have an account? Sign Up"}
+            </button>
+          </div>
         </form>
       </div>
     </div>

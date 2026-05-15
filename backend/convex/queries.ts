@@ -21,6 +21,18 @@ export const listDebates = query({
 export const getDebate = query({
   args: { id: v.id("debates") },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
+    const debate = await ctx.db.get(args.id);
+    if (!debate) return null;
+    if (debate.isPublic ?? false) return debate;
+    const userId = await getAuthUserId(ctx);
+    if (userId && debate.userId === userId) return debate;
+    return null;
+  },
+});
+
+export const viewer = query({
+  args: {},
+  handler: async (ctx) => {
+    return await getAuthUserId(ctx);
   },
 });

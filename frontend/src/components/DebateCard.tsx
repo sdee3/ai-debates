@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Clock, X } from "lucide-react"
+import { Clock, X, Globe, Lock } from "lucide-react"
 import type { Debate } from "../store/useDebateStore"
 
 interface DebateCardProps {
@@ -24,15 +24,21 @@ export function DebateCard({ debate, onDelete }: DebateCardProps) {
         <span className="font-medium text-lg line-clamp-1 group-hover:text-primary transition-colors">
           {debate.topic}
         </span>
-        <div className="flex items-center text-xs text-muted-foreground space-x-3">
-          <div className="flex items-center">
-            <Clock className="w-3 h-3 mr-1" />
-            {new Date(debate.createdAt).toISOString().split("T")[0]}
-          </div>
-          <div className="w-1 h-1 rounded-full bg-border" />
-          <span>{debate.modelIds.length} Models</span>
-          <div className="w-1 h-1 rounded-full bg-border" />
-          <span
+          <div className="flex items-center text-xs text-muted-foreground space-x-3">
+            <div className="flex items-center">
+              <Clock className="w-3 h-3 mr-1" />
+              {new Date(debate.createdAt).toISOString().split("T")[0]}
+            </div>
+            <div className="w-1 h-1 rounded-full bg-border" />
+            <span>{debate.modelIds.length} Models</span>
+            <div className="w-1 h-1 rounded-full bg-border" />
+            {debate.isPublic ? (
+              <Globe className="w-3 h-3 text-green-500" title="Public" />
+            ) : (
+              <Lock className="w-3 h-3 text-muted-foreground" title="Private" />
+            )}
+            <div className="w-1 h-1 rounded-full bg-border" />
+            <span
             className={`capitalize px-2 py-0.5 rounded-full text-[10px] font-medium ${
               debate.status === "completed"
                 ? "bg-green-500/10 text-green-500"

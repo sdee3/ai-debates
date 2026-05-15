@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useMutation } from "convex/react"
+import { api } from "@convex-api"
 import { useModels } from "../hooks/useModels"
-import { useDebateStore } from "../store/useDebateStore"
 import ModelSelector from "../components/ModelSelector"
-import { Loader2, AlertCircle } from "lucide-react"
+import { Loader2, AlertCircle, Globe, Lock } from "lucide-react"
 import { cn } from "../lib/utils"
 
 const POPULAR_MODELS = [
@@ -18,7 +19,7 @@ const POPULAR_MODELS = [
 export default function CreateDebate() {
   const navigate = useNavigate()
   const { models, loading, error } = useModels()
-  const { addDebate } = useDebateStore()
+  const createDebate = useMutation(api.mutations.createDebate)
 
   const availableModels = [...models]
   POPULAR_MODELS.forEach((pop) => {
@@ -29,9 +30,11 @@ export default function CreateDebate() {
 
   const [topic, setTopic] = useState("")
   const [selectedModels, setSelectedModels] = useState<string[]>([])
+  const [isPublic, setIsPublic] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!topic.trim()) {
       setValidationError("Please enter a topic.")
       return
@@ -41,17 +44,19 @@ export default function CreateDebate() {
       return
     }
 
-    const id = crypto.randomUUID()
-    addDebate({
-      id,
-      topic,
-      modelIds: selectedModels,
-      responses: [],
-      status: "pending",
-      createdAt: Date.now(),
-    })
-
-    navigate(`/debate/${id}`)
+    setCreating(true)
+    try {
+      const id = await createDebate({
+        topic,
+        modelIds: selectedModels,
+        isPublic,
+      })
+      navigate(`/debate/${id}`)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create debate"
+      setValidationError(message)
+      setCreating(false)
+    }
   }
 
   if (loading) {
@@ -182,6 +187,39 @@ export default function CreateDebate() {
           </div>
         </div>
 
+        <div className="flex items-center justify-between p-4 bg-background/50 border border-border rounded-xl">
+          <div className="flex items-center space-x-3">
+            {isPublic ? (
+              <Globe className="w-5 h-5 text-green-500" />
+            ) : (
+              <Lock className="w-5 h-5 text-muted-foreground" />
+            )}
+            <div>
+              <p className="text-sm font-medium text-foreground/80">
+                {isPublic ? "Public" : "Private"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {isPublic
+                  ? "Anyone with the link can view this debate"
+                  : "Only you can see this debate"}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsPublic(!isPublic)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isPublic ? "bg-green-500" : "bg-muted-foreground/30"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isPublic ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+
         {validationError && (
           <div className="p-4 text-sm text-red-400 bg-red-500/10 rounded-xl border border-red-500/20 flex items-center">
             <AlertCircle className="w-4 h-4 mr-2" />
@@ -191,9 +229,17 @@ export default function CreateDebate() {
 
         <button
           onClick={handleCreate}
+          disabled={creating}
           className="w-full py-4 text-lg font-medium text-white transition-all duration-200 bg-primary rounded-xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5"
         >
-          Start Debate
+          {creating ? (
+            <span className="flex items-center justify-center">
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Creating...
+            </span>
+          ) : (
+            "Start Debate"
+          )}
         </button>
       </div>
     </div>

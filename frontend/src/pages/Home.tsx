@@ -1,8 +1,7 @@
-import { useEffect, useMemo } from "react"
-import type { Debate, DebateResponse } from "../store/useDebateStore"
-import { useDebateStore } from "../store/useDebateStore"
+import { useMemo } from "react"
+import type { DebateResponse } from "../store/useDebateStore"
 import { usePaginatedQuery, useMutation } from "convex/react"
-import { api } from "../../../backend/convex/_generated/api"
+import { api } from "@convex-api"
 import { HeroSection } from "../components/HeroSection"
 import { DebateList } from "../components/DebateList"
 import { Loader2 } from "lucide-react"
@@ -12,16 +11,16 @@ interface ConvexDebateDoc {
   _creationTime: number
   topic: string
   responses: Array<DebateResponse>
+  isPublic: boolean
+  userId: string
 }
 
-function convertConvexDocToDebate(doc: ConvexDebateDoc): Debate {
+function convertConvexDocToDebate(doc: ConvexDebateDoc) {
   const modelIds = doc.responses.map((r) => r.modelId)
-  const uniqueModelIds: string[] = [...new Set(modelIds)]
-
   return {
     id: doc._id,
     topic: doc.topic,
-    modelIds: uniqueModelIds,
+    modelIds: [...new Set(modelIds)],
     responses: doc.responses.map((r) => ({
       modelId: r.modelId,
       content: r.content,
@@ -29,13 +28,14 @@ function convertConvexDocToDebate(doc: ConvexDebateDoc): Debate {
       status: r.status,
       error: r.error,
     })),
-    status: "completed",
+    status: "completed" as const,
     createdAt: doc._creationTime,
+    isPublic: doc.isPublic,
+    userId: doc.userId,
   }
 }
 
 export default function Home() {
-  const { debates, setDebates, deleteDebate } = useDebateStore()
   const deleteDebateMutation = useMutation(api.mutations.deleteDebate)
   const { results, status, loadMore } = usePaginatedQuery(
     api.queries.listDebates,
@@ -43,32 +43,19 @@ export default function Home() {
     { initialNumItems: 20 }
   )
 
-  const convexDebates = useMemo(
+  const debates = useMemo(
     () => (results ?? []).map(convertConvexDocToDebate),
     [results]
   )
-
-  useEffect(() => {
-    const currentDebates = useDebateStore.getState().debates
-    const inProgressDebates = currentDebates.filter(
-      (d) => d.status !== "completed"
-    )
-    const uniqueInProgress = inProgressDebates.filter(
-      (local) => !convexDebates.find((remote) => remote.id === local.id)
-    )
-    setDebates([...uniqueInProgress, ...convexDebates])
-  }, [convexDebates, setDebates])
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
     if (window.confirm("Are you sure you want to delete this debate?")) {
-      deleteDebate(id)
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await deleteDebateMutation({ id: id as any })
-      } catch {
-        console.log("Could not delete from backend (might be local-only)")
+      } catch (err: unknown) {
+        console.error("Failed to delete debate:", err)
       }
     }
   }

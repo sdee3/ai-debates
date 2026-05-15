@@ -1,45 +1,79 @@
-import { useEffect, useRef } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAction, useMutation } from "convex/react"
-import { api } from "../../../backend/convex/_generated/api"
+import { useEffect, useRef, useCallback } from "react"
+import { useAction, useMutation, useQuery } from "convex/react"
+import { api } from "@convex-api"
 import { useDebateStore } from "../store/useDebateStore"
+import type { DebateResponse } from "../store/useDebateStore"
 
-export function useDebateRunner(debateId: string) {
+export function useDebateRunner(debateId: string | null) {
   const generateCompletion = useAction(api.actions.generateCompletion)
-  const createDebate = useMutation(api.mutations.createDebate)
-  const navigate = useNavigate()
-  const { getDebate, updateDebate, addResponse, updateResponse } =
+  const updateResponses = useMutation(api.mutations.updateResponses)
+  const { setCurrentDebate, updateCurrentDebate, updateResponse } =
     useDebateStore()
-  const debate = getDebate(debateId)
   const runningRef = useRef(false)
 
+  const doc = useQuery(
+    api.queries.getDebate,
+    debateId ? ({ id: debateId } as any) : "skip"
+  )
+
+  const syncToStore = useCallback(() => {
+    if (!doc) return
+    const responses = doc.responses as DebateResponse[]
+    const modelIds = responses.map((r) => r.modelId)
+    setCurrentDebate({
+      id: doc._id,
+      topic: doc.topic,
+      modelIds: [...new Set(modelIds)],
+      responses: responses.map((r) => ({
+        modelId: r.modelId,
+        content: r.content,
+        ranking: r.ranking,
+        status: r.status,
+        error: r.error,
+      })),
+      status:
+        responses.every((r) => r.status === "completed" || r.status === "error")
+          ? "completed"
+          : responses.some((r) => r.status === "loading")
+            ? "in-progress"
+            : "pending",
+      createdAt: doc._creationTime,
+      isPublic: doc.isPublic ?? false,
+      userId: doc.userId,
+    })
+  }, [doc, setCurrentDebate])
+
   useEffect(() => {
-    if (!debate || debate.status !== "pending" || runningRef.current) {
-      return
-    }
+    syncToStore()
+  }, [syncToStore])
+
+  useEffect(() => {
+    if (!doc || !debateId || runningRef.current) return
+
+    const hasPending = (doc.responses as DebateResponse[]).some(
+      (r) => r.status === "pending"
+    )
+    if (!hasPending) return
 
     const runDebate = async () => {
       runningRef.current = true
-      updateDebate(debateId, { status: "in-progress" })
 
-      const prompt = `Topic: "${debate.topic}"`
+      const responses = [...doc.responses] as DebateResponse[]
+      const prompt = `Topic: "${doc.topic}"`
 
-      const promises = debate.modelIds.map(async (modelId: string) => {
-        addResponse(debateId, {
-          modelId,
-          content: "",
-          ranking: 0,
-          status: "loading",
-        })
+      const promises = responses.map(async (resp, index) => {
+        if (resp.status !== "pending") return
+
+        responses[index] = { ...resp, status: "loading" }
+        updateResponse(resp.modelId, { status: "loading" })
 
         try {
           const data = await generateCompletion({
-            model: modelId,
+            model: resp.modelId,
             messages: [{ role: "user", content: prompt }],
           })
 
           const content = data.choices?.[0]?.message?.content || ""
-
           const rankingMatch = content.match(/RANKING:\s*(\d)/i)
           let ranking = 0
           let cleanContent = content
@@ -49,14 +83,25 @@ export function useDebateRunner(debateId: string) {
             cleanContent = content.replace(/RANKING:\s*\d\s*/i, "").trim()
           }
 
-          updateResponse(debateId, modelId, {
+          responses[index] = {
+            ...resp,
+            content: cleanContent,
+            ranking,
+            status: "completed",
+          }
+          updateResponse(resp.modelId, {
             content: cleanContent,
             ranking,
             status: "completed",
           })
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : "Unknown error"
-          updateResponse(debateId, modelId, {
+          responses[index] = {
+            ...resp,
+            status: "error",
+            error: message,
+          }
+          updateResponse(resp.modelId, {
             status: "error",
             error: message,
           })
@@ -65,31 +110,18 @@ export function useDebateRunner(debateId: string) {
 
       await Promise.all(promises)
 
-      const finalDebate = useDebateStore
-        .getState()
-        .debates.find((d) => d.id === debateId)
-      if (finalDebate) {
-        try {
-          const convexId = await createDebate({
-            topic: finalDebate.topic,
-            responses: finalDebate.responses,
-          })
-          updateDebate(debateId, { status: "completed" })
-          navigate(`/debate/${convexId}`, { replace: true })
-          return
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : "Failed to save debate"
-          console.error("Failed to persist debate:", message)
-          updateDebate(debateId, { status: "completed" })
-        }
-      } else {
-        updateDebate(debateId, { status: "completed" })
+      try {
+        await updateResponses({ id: debateId as any, responses })
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to save"
+        console.error("Failed to persist responses:", message)
       }
 
+      updateCurrentDebate({ status: "completed" })
       runningRef.current = false
     }
 
     runDebate()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debateId, debate?.status])
+  }, [debateId, doc?._id])
 }
