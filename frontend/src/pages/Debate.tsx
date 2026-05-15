@@ -99,22 +99,22 @@ export default function Debate() {
           Log in to create your own thread and let AI models debate
         </div>
       )}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex items-center space-x-4 lg:flex-1 lg:min-w-0">
           {isAuthenticated && (
             <Link
               to="/"
-              className="p-2 rounded-full hover:bg-secondary transition-colors"
+              className="p-2 rounded-full hover:bg-secondary transition-colors shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
           )}
-          <h1 className="text-2xl font-bold leading-tight">
+          <h1 className="text-2xl font-bold leading-tight break-words">
             {currentDebate.topic}
           </h1>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 self-end lg:self-auto lg:shrink-0">
           {currentDebate.isPublic ? (
             <span className="inline-flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2.5 py-1 rounded-full">
               <Globe className="w-3 h-3 mr-1" />
@@ -130,7 +130,7 @@ export default function Debate() {
           {isOwner && (
             <button
               onClick={handleTogglePublic}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
                 currentDebate.isPublic ? "bg-green-500" : "bg-muted-foreground/30"
               }`}
             >
@@ -145,7 +145,7 @@ export default function Debate() {
           {currentDebate.isPublic && (
             <button
               onClick={handleCopyLink}
-              className="inline-flex items-center text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-full transition-colors"
+              className="inline-flex items-center text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
               {copied ? (
                 <>

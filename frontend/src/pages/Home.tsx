@@ -78,7 +78,7 @@ export default function Home() {
       {status === "CanLoadMore" && (
         <button
           onClick={() => loadMore(20)}
-          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+          className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
         >
           Load more debates
         </button>

@@ -105,7 +105,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 text-lg font-medium text-white transition-all duration-200 bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-50"
+            className="w-full py-3 text-lg font-medium text-white transition-all duration-200 bg-primary rounded-xl hover:bg-primary/90 disabled:opacity-50 cursor-pointer"
           >
             {submitting
               ? "Please wait..."
@@ -121,7 +121,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
                 setIsSignUp(!isSignUp)
                 setError("")
               }}
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-primary hover:underline cursor-pointer"
             >
               {isSignUp
                 ? "Already have an account? Sign In"

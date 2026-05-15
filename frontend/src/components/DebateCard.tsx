@@ -20,10 +20,12 @@ export function DebateCard({ debate, onDelete }: DebateCardProps) {
       >
         <X className="w-4 h-4" />
       </button>
-      <div className="flex flex-col space-y-2">
-        <span className="font-medium text-lg line-clamp-1 group-hover:text-primary transition-colors">
-          {debate.topic}
-        </span>
+      <div className="flex flex-col space-y-2 w-full">
+        <div className="flex justify-between items-center pr-8">
+          <span className="font-medium text-lg line-clamp-1 group-hover:text-primary transition-colors">
+            {debate.topic}
+          </span>
+        </div>
           <div className="flex items-center text-xs text-muted-foreground space-x-3">
             <div className="flex items-center">
               <Clock className="w-3 h-3 mr-1" />
@@ -32,14 +34,8 @@ export function DebateCard({ debate, onDelete }: DebateCardProps) {
             <div className="w-1 h-1 rounded-full bg-border" />
             <span>{debate.modelIds.length} Models</span>
             <div className="w-1 h-1 rounded-full bg-border" />
-            {debate.isPublic ? (
-              <Globe className="w-3 h-3 text-green-500" title="Public" />
-            ) : (
-              <Lock className="w-3 h-3 text-muted-foreground" title="Private" />
-            )}
-            <div className="w-1 h-1 rounded-full bg-border" />
             <span
-            className={`capitalize px-2 py-0.5 rounded-full text-[10px] font-medium ${
+            className={`capitalize px-2 py-0.5 rounded-full text-xs font-medium ${
               debate.status === "completed"
                 ? "bg-green-500/10 text-green-500"
                 : "bg-yellow-500/10 text-yellow-500"
@@ -47,6 +43,18 @@ export function DebateCard({ debate, onDelete }: DebateCardProps) {
           >
             {debate.status}
           </span>
+          <div className="w-1 h-1 rounded-full bg-border" />
+          {debate.isPublic ? (
+            <span className="inline-flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2.5 py-1 rounded-full">
+              <Globe className="w-3 h-3 mr-1" />
+              Public
+            </span>
+          ) : (
+            <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-secondary/50 px-2.5 py-1 rounded-full">
+              <Lock className="w-3 h-3 mr-1" />
+              Private
+            </span>
+          )}
         </div>
       </div>
     </Link>

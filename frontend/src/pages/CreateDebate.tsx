@@ -139,7 +139,7 @@ export default function CreateDebate() {
                   )
                   setValidationError(null)
                 }}
-                className="hover:text-primary transition-colors"
+                className="hover:text-primary transition-colors cursor-pointer"
               >
                 Select All
               </button>
@@ -151,7 +151,7 @@ export default function CreateDebate() {
                     selectedModels.filter((id) => !popularIds.includes(id))
                   )
                 }}
-                className="hover:text-primary transition-colors"
+                className="hover:text-primary transition-colors cursor-pointer"
               >
                 Deselect All
               </button>
@@ -174,7 +174,7 @@ export default function CreateDebate() {
                     }
                   }}
                   className={cn(
-                    "flex items-center justify-center px-4 py-3 text-sm font-medium rounded-xl border transition-all duration-200",
+                    "flex items-center justify-center px-4 py-3 text-sm font-medium rounded-xl border transition-all duration-200 cursor-pointer",
                     isSelected
                       ? "bg-primary/10 border-primary text-primary shadow-sm"
                       : "bg-background/50 border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-accent/5"
@@ -208,7 +208,7 @@ export default function CreateDebate() {
           <button
             type="button"
             onClick={() => setIsPublic(!isPublic)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
               isPublic ? "bg-green-500" : "bg-muted-foreground/30"
             }`}
           >
@@ -230,7 +230,7 @@ export default function CreateDebate() {
         <button
           onClick={handleCreate}
           disabled={creating}
-          className="w-full py-4 text-lg font-medium text-white transition-all duration-200 bg-primary rounded-xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5"
+          className="w-full py-4 text-lg font-medium text-white transition-all duration-200 bg-primary rounded-xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 cursor-pointer"
         >
           {creating ? (
             <span className="flex items-center justify-center">

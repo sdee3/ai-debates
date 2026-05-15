@@ -44,7 +44,7 @@ export default function ModelSelector({
               <span>{model?.name || modelId}</span>
               <button
                 onClick={() => onRemove(modelId)}
-                className="hover:text-destructive focus:outline-none transition-colors"
+                className="hover:text-destructive focus:outline-none transition-colors cursor-pointer"
                 disabled={disabled}
               >
                 <X className="w-3 h-3" />

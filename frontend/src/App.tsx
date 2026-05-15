@@ -4,6 +4,7 @@ import Header from "./components/Header"
 import Home from "./pages/Home"
 import CreateDebate from "./pages/CreateDebate"
 import Debate from "./pages/Debate"
+import Credits from "./pages/Credits"
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
               }
             />
             <Route path="/debate/:id" element={<Debate />} />
+            <Route path="/credits" element={<Credits />} />
           </Routes>
         </main>
       </div>
