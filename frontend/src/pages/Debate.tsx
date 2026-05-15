@@ -10,7 +10,7 @@ import { useConvexAuth } from "@convex-dev/auth/react"
 import { ArrowLeft, Loader2, AlertTriangle, Globe, Lock, Check, Copy, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { cn } from "../lib/utils"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef, useEffect } from "react"
 import { SEO } from "../components/SEO"
 
 export default function Debate() {
@@ -20,6 +20,19 @@ export default function Debate() {
   const { currentDebate } = useDebateStore()
   const [copied, setCopied] = useState(false)
   const [expandedResponses, setExpandedResponses] = useState<Record<string, boolean>>({})
+  const [overflowingResponses, setOverflowingResponses] = useState<Record<string, boolean>>({})
+  const contentRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  useEffect(() => {
+    const newOverflowing: Record<string, boolean> = {}
+    for (const modelId of currentDebate?.modelIds || []) {
+      const el = contentRefs.current[modelId]
+      if (el) {
+        newOverflowing[modelId] = el.scrollHeight > el.clientHeight + 1
+      }
+    }
+    setOverflowingResponses(newOverflowing)
+  }, [currentDebate?.responses, currentDebate?.modelIds])
 
   const navigate = useNavigate()
   const viewerId = useQuery(api.queries.viewer)
@@ -275,7 +288,9 @@ export default function Debate() {
                       {getRankingLabel(response?.ranking || 0)}
                     </span>
                   </div>
-                  <div className={cn(
+                  <div
+                    ref={(el) => { contentRefs.current[modelId] = el }}
+                    className={cn(
                     "text-sm leading-relaxed text-muted-foreground prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-headings:text-foreground prose-a:text-primary scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent pr-2",
                     expandedResponses[modelId]
                       ? "flex-1 overflow-y-auto"
@@ -283,7 +298,7 @@ export default function Debate() {
                   )}>
                     <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{response?.content || ""}</ReactMarkdown>
                   </div>
-                  {!expandedResponses[modelId] && (
+                  {!expandedResponses[modelId] && overflowingResponses[modelId] && (
                     <button
                       onClick={() => setExpandedResponses(prev => ({ ...prev, [modelId]: true }))}
                       className="w-full mt-2 py-2 text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors text-center cursor-pointer"
