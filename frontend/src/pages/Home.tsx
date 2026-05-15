@@ -1,6 +1,6 @@
-import { useMemo } from "react"
+import { useState, useMemo } from "react"
 import type { DebateResponse } from "../store/useDebateStore"
-import { usePaginatedQuery, useMutation } from "convex/react"
+import { useQuery, usePaginatedQuery, useMutation } from "convex/react"
 import { api } from "@convex-api"
 import { HeroSection } from "../components/HeroSection"
 import { DebateList } from "../components/DebateList"
@@ -43,18 +43,31 @@ function convertConvexDocToDebate(doc: ConvexDebateDoc) {
   }
 }
 
-export default function Home() {
-  const deleteDebateMutation = useMutation(api.mutations.deleteDebate)
-  const { results, status, loadMore } = usePaginatedQuery(
+function useLatestDebates() {
+  return useQuery(api.queries.getLatestDebates, { count: 3 })
+}
+
+function useAllDebates() {
+  return usePaginatedQuery(
     api.queries.listDebates,
     {},
     { initialNumItems: 20 }
   )
+}
 
-  const debates = useMemo(
-    () => (results ?? []).map(convertConvexDocToDebate),
-    [results]
-  )
+export default function Home() {
+  const [showAll, setShowAll] = useState(false)
+  const deleteDebateMutation = useMutation(api.mutations.deleteDebate)
+
+  const latestDebates = useLatestDebates()
+  const { results, status, loadMore } = useAllDebates()
+
+  const debates = useMemo(() => {
+    if (showAll) {
+      return (results ?? []).map(convertConvexDocToDebate)
+    }
+    return (latestDebates ?? []).map(convertConvexDocToDebate)
+  }, [showAll, results, latestDebates])
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.preventDefault()
@@ -68,7 +81,18 @@ export default function Home() {
     }
   }
 
-  if (status === "LoadingFirstPage") {
+  if (!showAll && latestDebates === undefined) {
+    return (
+      <div className="flex flex-col items-center min-h-[80vh] space-y-24 py-12">
+        <HeroSection />
+        <div className="flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </div>
+    )
+  }
+
+  if (showAll && status === "LoadingFirstPage") {
     return (
       <div className="flex flex-col items-center min-h-[80vh] space-y-24 py-12">
         <HeroSection />
@@ -82,8 +106,13 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center min-h-[80vh] space-y-24 py-12">
       <HeroSection />
-      <DebateList debates={debates} onDelete={handleDelete} />
-      {status === "CanLoadMore" && (
+      <DebateList
+        debates={debates}
+        onDelete={handleDelete}
+        showAll={showAll}
+        onShowAll={() => setShowAll(true)}
+      />
+      {showAll && status === "CanLoadMore" && (
         <button
           onClick={() => loadMore(20)}
           className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"

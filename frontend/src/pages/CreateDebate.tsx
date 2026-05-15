@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAction } from "convex/react"
 import { api } from "@convex-api"
+import { SEO } from "../components/SEO"
 import { useModels } from "../hooks/useModels"
 import ModelSelector from "../components/ModelSelector"
 import { Loader2, AlertCircle, Globe, Lock } from "lucide-react"
@@ -62,14 +63,23 @@ export default function CreateDebate() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <>
+        <SEO title="Create a New Debate" description="Pick a topic, select AI models, and start a debate." noIndex />
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </>
     )
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-8">
+      <SEO
+        title="Create a New Debate"
+        description="Pick a topic, select AI models, and start a debate. Models will generate arguments and rank their agreement."
+        canonical="/create"
+        noIndex
+      />
       <div className="space-y-2 text-center">
         <h1 className="text-4xl font-bold tracking-tight">Create New Debate</h1>
         <p className="text-lg text-muted-foreground">

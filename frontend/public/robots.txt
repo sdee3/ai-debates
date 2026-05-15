@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ai-debate.sdee3.com/sitemap.xml

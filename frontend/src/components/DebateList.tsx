@@ -4,9 +4,11 @@ import { DebateCard } from "./DebateCard"
 interface DebateListProps {
   debates: Debate[]
   onDelete: (e: React.MouseEvent, id: string) => void
+  showAll?: boolean
+  onShowAll?: () => void
 }
 
-export function DebateList({ debates, onDelete }: DebateListProps) {
+export function DebateList({ debates, onDelete, showAll, onShowAll }: DebateListProps) {
   if (debates.length === 0) return null
 
   return (
@@ -22,6 +24,16 @@ export function DebateList({ debates, onDelete }: DebateListProps) {
           <DebateCard key={debate.id} debate={debate} onDelete={onDelete} />
         ))}
       </div>
+      {!showAll && onShowAll && (
+        <div className="flex justify-center">
+          <button
+            onClick={onShowAll}
+            className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+          >
+            Show all
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -18,6 +18,19 @@ export const listDebates = query({
   },
 });
 
+export const getLatestDebates = query({
+  args: { count: v.number() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+    return await ctx.db
+      .query("debates")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(args.count);
+  },
+});
+
 export const getDebate = query({
   args: { id: v.id("debates") },
   handler: async (ctx, args) => {

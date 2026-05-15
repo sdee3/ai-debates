@@ -9,7 +9,8 @@ import { useConvexAuth } from "@convex-dev/auth/react"
 import { ArrowLeft, Loader2, AlertTriangle, Globe, Lock, Check, Copy, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { cn } from "../lib/utils"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { SEO } from "../components/SEO"
 
 export default function Debate() {
   const { id } = useParams<{ id: string }>()
@@ -52,23 +53,43 @@ export default function Debate() {
 
   const showNotFound = !currentDebate && doc !== undefined
 
+  const seoTitle = currentDebate ? `Debate: ${currentDebate.topic}` : showNotFound ? "Debate Not Found" : "Loading Debate"
+
+  const seoDescription = useMemo(() => {
+    if (!currentDebate) return "Watch AI models debate and rank their agreement on this topic."
+    const modelNames = currentDebate.modelIds
+      .map((id) => models.find((m) => m.id === id)?.name)
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(", ")
+    return `AI models debate "${currentDebate.topic}". See how ${modelNames || "multiple AI models"} rank their agreement on this topic.`
+  }, [currentDebate, models])
+
+  const canonicalPath = id ? `/debate/${id}` : undefined
+
   if (showLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <p className="text-muted-foreground">Loading debate...</p>
-      </div>
+      <>
+        <SEO title="Loading Debate" description="Loading debate..." canonical={canonicalPath} />
+        <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading debate...</p>
+        </div>
+      </>
     )
   }
 
   if (showNotFound) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-        <h2 className="text-2xl font-bold">Debate Not Found</h2>
-        <Link to="/" className="text-primary hover:underline">
-          Return Home
-        </Link>
-      </div>
+      <>
+        <SEO title="Debate Not Found" description="This debate could not be found." canonical={canonicalPath} />
+        <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+          <h2 className="text-2xl font-bold">Debate Not Found</h2>
+          <Link to="/" className="text-primary hover:underline">
+            Return Home
+          </Link>
+        </div>
+      </>
     )
   }
 
@@ -97,6 +118,12 @@ export default function Debate() {
 
   return (
     <div className="space-y-8 pb-12">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical={canonicalPath}
+        noIndex={!currentDebate.isPublic}
+      />
       {!isAuthenticated && (
         <div className="bg-secondary/50 border border-secondary text-secondary-foreground px-4 py-2 rounded-lg text-sm text-center mb-4">
           Log in to create your own thread and let AI models debate

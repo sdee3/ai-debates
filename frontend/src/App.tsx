@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { AuthGuard } from "./components/AuthGuard"
 import Header from "./components/Header"
+import ReloadPrompt from "./components/ReloadPrompt"
 import Home from "./pages/Home"
 import CreateDebate from "./pages/CreateDebate"
 import Debate from "./pages/Debate"
@@ -26,6 +27,7 @@ function App() {
             <Route path="/credits" element={<Credits />} />
           </Routes>
         </main>
+        <ReloadPrompt />
       </div>
     </Router>
   )
