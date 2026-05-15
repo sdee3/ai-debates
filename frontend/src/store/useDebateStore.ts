@@ -11,6 +11,7 @@ export interface DebateResponse {
 export interface Debate {
   id: string
   topic: string
+  fullTopic?: string
   modelIds: string[]
   responses: DebateResponse[]
   status: "pending" | "in-progress" | "completed"

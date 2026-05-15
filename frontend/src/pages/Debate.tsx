@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import ReactMarkdown from "react-markdown"
 import { useDebateStore } from "../store/useDebateStore"
 import { useQuery, useMutation } from "convex/react"
@@ -6,7 +6,7 @@ import { api } from "@convex-api"
 import { useDebateRunner } from "../hooks/useDebateRunner"
 import { useModels } from "../hooks/useModels"
 import { useConvexAuth } from "@convex-dev/auth/react"
-import { ArrowLeft, Loader2, AlertTriangle, Globe, Lock, Check, Copy } from "lucide-react"
+import { ArrowLeft, Loader2, AlertTriangle, Globe, Lock, Check, Copy, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { cn } from "../lib/utils"
 import { useState } from "react"
@@ -19,8 +19,10 @@ export default function Debate() {
   const [copied, setCopied] = useState(false)
   const [expandedResponses, setExpandedResponses] = useState<Record<string, boolean>>({})
 
+  const navigate = useNavigate()
   const viewerId = useQuery(api.queries.viewer)
   const togglePublic = useMutation(api.mutations.togglePublicDebate)
+  const deleteDebate = useMutation(api.mutations.deleteDebate)
 
   const doc = useQuery(
     api.queries.getDebate,
@@ -164,6 +166,15 @@ export default function Debate() {
         </div>
       </div>
 
+      {currentDebate.fullTopic && currentDebate.fullTopic !== currentDebate.topic && (
+        <div className="p-5 bg-secondary/20 border border-border/50 rounded-xl text-sm text-muted-foreground leading-relaxed">
+          <span className="font-medium text-foreground/70 text-xs uppercase tracking-wider block mb-2">
+            Original Topic
+          </span>
+          {currentDebate.fullTopic}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {currentDebate.modelIds.map((modelId, index) => {
           const response = currentDebate.responses.find(
@@ -246,6 +257,28 @@ export default function Debate() {
           )
         })}
       </div>
+
+      {isOwner && (
+        <div className="border-t border-border/50 pt-6 space-y-3">
+          <h3 className="text-sm font-medium text-foreground/60 uppercase tracking-wider">Actions</h3>
+          <button
+            onClick={async () => {
+              if (window.confirm("Are you sure you want to delete this debate?")) {
+                try {
+                  await deleteDebate({ id: id as any })
+                  navigate("/")
+                } catch (err) {
+                  console.error("Failed to delete debate:", err)
+                }
+              }
+            }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-lg transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Debate
+          </button>
+        </div>
+      )}
     </div>
   )
 }

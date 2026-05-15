@@ -15,6 +15,14 @@ interface ConvexDebateDoc {
   userId: string
 }
 
+function deriveDebateStatus(responses: Array<DebateResponse>): "pending" | "in-progress" | "completed" {
+  if (responses.every((r) => r.status === "completed" || r.status === "error"))
+    return "completed"
+  if (responses.some((r) => r.status === "loading"))
+    return "in-progress"
+  return "pending"
+}
+
 function convertConvexDocToDebate(doc: ConvexDebateDoc) {
   const modelIds = doc.responses.map((r) => r.modelId)
   return {
@@ -28,7 +36,7 @@ function convertConvexDocToDebate(doc: ConvexDebateDoc) {
       status: r.status,
       error: r.error,
     })),
-    status: "completed" as const,
+    status: deriveDebateStatus(doc.responses as DebateResponse[]),
     createdAt: doc._creationTime,
     isPublic: doc.isPublic,
     userId: doc.userId,

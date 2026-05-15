@@ -5,6 +5,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const createDebate = mutation({
   args: {
     topic: v.string(),
+    fullTopic: v.optional(v.string()),
     modelIds: v.array(v.string()),
     isPublic: v.optional(v.boolean()),
   },
@@ -20,6 +21,7 @@ export const createDebate = mutation({
     const id = await ctx.db.insert("debates", {
       userId,
       topic: args.topic,
+      fullTopic: args.fullTopic,
       isPublic: args.isPublic ?? false,
       responses,
     });

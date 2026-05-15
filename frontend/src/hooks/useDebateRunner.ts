@@ -23,6 +23,7 @@ export function useDebateRunner(debateId: string | null) {
     setCurrentDebate({
       id: doc._id,
       topic: doc.topic,
+      fullTopic: doc.fullTopic,
       modelIds: [...new Set(modelIds)],
       responses: responses.map((r) => ({
         modelId: r.modelId,

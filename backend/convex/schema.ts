@@ -7,6 +7,7 @@ export default defineSchema({
   debates: defineTable({
     userId: v.string(),
     topic: v.string(),
+    fullTopic: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
     responses: v.array(
       v.object({

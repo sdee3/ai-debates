@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useMutation } from "convex/react"
+import { useAction } from "convex/react"
 import { api } from "@convex-api"
 import { useModels } from "../hooks/useModels"
 import ModelSelector from "../components/ModelSelector"
@@ -19,7 +19,7 @@ const POPULAR_MODELS = [
 export default function CreateDebate() {
   const navigate = useNavigate()
   const { models, loading, error } = useModels()
-  const createDebate = useMutation(api.mutations.createDebate)
+  const createDebate = useAction(api.actions.createDebateWithSummary)
 
   const availableModels = [...models]
   POPULAR_MODELS.forEach((pop) => {
