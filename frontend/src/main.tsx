@@ -16,6 +16,12 @@ createRoot(document.getElementById("root")!).render(
       publishableKey={env.clerkPublishableKey}
       signInUrl={env.clerkSignInUrl}
       signUpUrl={env.clerkSignUpUrl}
+      allowedRedirectOrigins={[
+        window.location.origin,
+        "https://identity.sdee3.com",
+        "https://ai-debate.sdee3.com",
+        "http://localhost:5173",
+      ]}
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <HelmetProvider>
