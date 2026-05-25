@@ -1,9 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
-  ...authTables,
   debates: defineTable({
     userId: v.string(),
     topic: v.string(),
@@ -19,20 +17,22 @@ export default defineSchema({
           v.literal("pending"),
           v.literal("loading"),
           v.literal("completed"),
-          v.literal("error")
+          v.literal("error"),
         ),
         error: v.optional(v.string()),
-      })
+      }),
     ),
   }).index("by_user", ["userId"]),
-  rateLimits: defineTable({
-    userId: v.string(),
+  debateRateLimits: defineTable({
+    clerkUserId: v.string(),
     action: v.string(),
     lastInvokedAt: v.number(),
-  }).index("by_user_action", ["userId", "action"]),
-  ipRateLimits: defineTable({
-    ip: v.string(),
+  }).index("by_user_action", ["clerkUserId", "action"]),
+  auditLogs: defineTable({
+    userId: v.string(),
     action: v.string(),
-    timestamps: v.array(v.number()),
-  }).index("by_ip_action", ["ip", "action"]),
+    debateId: v.optional(v.id("debates")),
+    details: v.optional(v.string()),
+    timestamp: v.number(),
+  }).index("by_timestamp", ["timestamp"]),
 });

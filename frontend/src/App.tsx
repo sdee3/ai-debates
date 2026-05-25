@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
-import { AuthGuard } from "./components/AuthGuard"
+import { AuthGate } from "./components/AuthGate"
 import Header from "./components/Header"
 import ReloadPrompt from "./components/ReloadPrompt"
 import { ErrorBoundary } from "./components/ErrorBoundary"
@@ -20,9 +20,9 @@ function App() {
             <Route
               path="/create"
               element={
-                <AuthGuard>
+                <AuthGate>
                   <CreateDebate />
-                </AuthGuard>
+                </AuthGate>
               }
             />
             <Route path="/debate/:slugOrId" element={<ErrorBoundary fallback={<NotFound />}><Debate /></ErrorBoundary>} />

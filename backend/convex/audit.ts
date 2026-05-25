@@ -1,6 +1,6 @@
 import { mutation } from "./_generated/server"
 import { v } from "convex/values"
-import { getAuthUserId } from "@convex-dev/auth/server"
+import { requireClerkUserId } from "./lib/auth"
 
 export const logAuditEvent = mutation({
   args: {
@@ -9,8 +9,7 @@ export const logAuditEvent = mutation({
     details: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx)
-    if (!userId) throw new Error("Not authenticated")
+    const userId = await requireClerkUserId(ctx)
     await ctx.db.insert("auditLogs", {
       userId,
       action: args.action,

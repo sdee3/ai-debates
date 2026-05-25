@@ -1,6 +1,6 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireClerkUserId } from "./lib/auth";
 import { api } from "./_generated/api";
 
 function sanitizeHtml(text: string): string {
@@ -24,8 +24,7 @@ export const createDebate = mutation({
     isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireClerkUserId(ctx);
     const { topic, fullTopic } = validateAndSanitizeTopic(args.topic, args.fullTopic);
     const responses = args.modelIds.map((modelId) => ({
       modelId,
@@ -50,8 +49,7 @@ export const createDebate = mutation({
 export const togglePublicDebate = mutation({
   args: { id: v.id("debates") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireClerkUserId(ctx);
     const debate = await ctx.db.get(args.id);
     if (!debate || debate.userId !== userId) {
       throw new Error("Not authorized");
@@ -81,8 +79,7 @@ export const updateResponses = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireClerkUserId(ctx);
     const debate = await ctx.db.get(args.id);
     if (!debate || debate.userId !== userId) {
       throw new Error("Not authorized");
@@ -95,8 +92,7 @@ export const updateResponses = mutation({
 export const deleteDebate = mutation({
   args: { id: v.id("debates") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    const userId = await requireClerkUserId(ctx);
     const debate = await ctx.db.get(args.id);
     if (!debate || debate.userId !== userId) {
       throw new Error("Not authorized");

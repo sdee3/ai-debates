@@ -1,12 +1,12 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getClerkUserIdOrNull } from "./lib/auth";
 
 export const listDebates = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getClerkUserIdOrNull(ctx);
     if (!userId) {
       return { page: [], continueCursor: "", isDone: true };
     }
@@ -21,7 +21,7 @@ export const listDebates = query({
 export const getLatestDebates = query({
   args: { count: v.number() },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await getClerkUserIdOrNull(ctx);
     if (!userId) return [];
     return await ctx.db
       .query("debates")
@@ -37,7 +37,7 @@ export const getDebate = query({
     const debate = await ctx.db.get(args.id);
     if (!debate) return null;
     if (debate.isPublic ?? false) return debate;
-    const userId = await getAuthUserId(ctx);
+    const userId = await getClerkUserIdOrNull(ctx);
     if (userId && debate.userId === userId) return debate;
     return null;
   },
@@ -46,7 +46,7 @@ export const getDebate = query({
 export const viewer = query({
   args: {},
   handler: async (ctx) => {
-    return await getAuthUserId(ctx);
+    return await getClerkUserIdOrNull(ctx);
   },
 });
 
@@ -59,7 +59,7 @@ export const getDebateBySlug = query({
       .first()
     if (!debate) return null
     if (debate.isPublic ?? false) return debate
-    const userId = await getAuthUserId(ctx)
+    const userId = await getClerkUserIdOrNull(ctx)
     if (userId && debate.userId === userId) return debate
     return null
   },

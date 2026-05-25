@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Bot, LogOut, Coins } from "lucide-react"
-import { useConvexAuth, useAuthActions } from "@convex-dev/auth/react"
+import { useAuth, useClerk } from "@clerk/react"
+import { useConvexAuth } from "convex/react"
+import { buildIdentitySignInUrl } from "./AuthGate"
 
 export default function Header() {
+  const { isSignedIn } = useAuth()
   const { isAuthenticated } = useConvexAuth()
-  const { signOut } = useAuthActions()
+  const { signOut } = useClerk()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -41,16 +44,40 @@ export default function Header() {
           </span>
         </Link>
         <div className="flex items-center space-x-4">
-          {isAuthenticated ? (
+          {isSignedIn && isAuthenticated ? (
             <div ref={menuRef} className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-secondary transition-colors cursor-pointer"
               >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground">
-                  <circle cx="12" cy="9" r="3" stroke="currentColor" strokeWidth="1.5"/>
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
-                  <path d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <svg
+                  width="28"
+                  height="28"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-muted-foreground"
+                >
+                  <circle
+                    cx="12"
+                    cy="9"
+                    r="3"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
               {menuOpen && (
@@ -74,12 +101,17 @@ export default function Header() {
               )}
             </div>
           ) : (
-            <Link
-              to="/create"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = buildIdentitySignInUrl(
+                  `${window.location.origin}/create`,
+                )
+              }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               Sign In
-            </Link>
+            </button>
           )}
         </div>
       </div>

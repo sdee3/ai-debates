@@ -1,19 +1,27 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { HelmetProvider } from 'react-helmet-async'
-import { ConvexAuthProvider } from "@convex-dev/auth/react"
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import { HelmetProvider } from "react-helmet-async"
+import { ClerkProvider, useAuth } from "@clerk/react"
+import { ConvexProviderWithClerk } from "convex/react-clerk"
 import { ConvexReactClient } from "convex/react"
-import './index.css'
-import App from './App.tsx'
+import "./index.css"
+import App from "./App.tsx"
+import { env } from "./lib/env"
 
-const convex = new ConvexReactClient(import.meta.env.CONVEX_URL)
+const convex = new ConvexReactClient(env.convexUrl)
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <HelmetProvider>
-      <ConvexAuthProvider client={convex}>
-        <App />
-      </ConvexAuthProvider>
-    </HelmetProvider>
+    <ClerkProvider
+      publishableKey={env.clerkPublishableKey}
+      signInUrl={env.clerkSignInUrl}
+      signUpUrl={env.clerkSignUpUrl}
+    >
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <HelmetProvider>
+          <App />
+        </HelmetProvider>
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
   </StrictMode>,
 )

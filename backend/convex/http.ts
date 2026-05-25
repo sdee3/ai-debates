@@ -1,42 +1,9 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { api } from "./_generated/api";
-import { auth } from "./auth";
-
 const SITE_URL = "https://ai-debate.sdee3.com";
 
 const http = httpRouter();
-
-// Auth routes (OAuth callbacks)
-auth.addHttpRoutes(http);
-
-// Rate limit check for sign-in attempts (5 per hour per IP)
-http.route({
-  path: "/api/check-rate-limit",
-  method: "POST",
-  handler: httpAction(async (ctx, request) => {
-    const forwarded = request.headers.get("x-forwarded-for");
-    const ip = forwarded?.split(",")[0]?.trim() || "unknown";
-
-    try {
-      await ctx.runMutation(api.rateLimit.recordIpAttempt, {
-        ip,
-        action: "signIn",
-      });
-      return new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Too many sign-in attempts. Please try again later.";
-      return new Response(JSON.stringify({ ok: false, error: message }), {
-        status: 429,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-  }),
-});
 
 /**
  * SEO prerendering for debate pages.
