@@ -51,7 +51,7 @@ function isBot(userAgent) {
   });
 }
 
-exports.handler = function (event, context, callback) {
+exports.handler = async function (event) {
   var request = event.Records[0].cf.request;
   var userAgent = '';
 
@@ -86,5 +86,5 @@ exports.handler = function (event, context, callback) {
     }];
   }
 
-  callback(null, request);
+  return request;
 };

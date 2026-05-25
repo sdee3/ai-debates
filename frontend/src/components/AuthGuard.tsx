@@ -40,7 +40,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       formData.set("flow", isSignUp ? "signUp" : "signIn")
 
       if (!isSignUp) {
-        const actionsUrl = import.meta.env.VITE_CONVEX_ACTIONS_URL
+        const actionsUrl = import.meta.env.CONVEX_SITE_URL
         if (actionsUrl) {
           const res = await fetch(`${actionsUrl}/api/check-rate-limit`, {
             method: "POST",

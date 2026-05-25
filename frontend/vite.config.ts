@@ -3,8 +3,13 @@ import react from "@vitejs/plugin-react"
 import { VitePWA } from "vite-plugin-pwa"
 import path from "path"
 
+// Convex CLI writes CONVEX_URL / CONVEX_SITE_URL to backend/.env.local — load them here.
+const backendDir = path.resolve(__dirname, "../backend")
+
 // https://vite.dev/config/
 export default defineConfig({
+  envDir: backendDir,
+  envPrefix: ["CONVEX_"],
   plugins: [
     react(),
     VitePWA({

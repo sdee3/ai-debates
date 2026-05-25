@@ -10,6 +10,7 @@ LAMBDA_ROLE_NAME="ai-debates-lambda-edge-role"
 LAMBDA_DIR="${SCRIPT_DIR}"
 BUILD_DIR="${ROOT_DIR}/.tmp-lambda-build"
 REGION="us-east-1"
+LAMBDA_RUNTIME="nodejs24.x"
 
 echo "=== Lambda@Edge SEO Router Deployment ==="
 
@@ -89,7 +90,7 @@ if [ -z "${FUNCTION_ARN}" ] || [ "${FUNCTION_ARN}" = "None" ]; then
   echo "Creating Lambda function ${LAMBDA_FUNCTION_NAME}..."
   aws lambda create-function \
     --function-name "${LAMBDA_FUNCTION_NAME}" \
-    --runtime nodejs20.x \
+    --runtime "${LAMBDA_RUNTIME}" \
     --role "${ROLE_ARN}" \
     --handler index.handler \
     --zip-file "fileb://${BUILD_DIR}/seo-router.zip" \
@@ -104,9 +105,26 @@ else
     --function-name "${LAMBDA_FUNCTION_NAME}" \
     --zip-file "fileb://${BUILD_DIR}/seo-router.zip" \
     --region "${REGION}" \
-    --publish \
     --query 'FunctionArn' \
     --output text
+
+  echo "Waiting for Lambda code update..."
+  aws lambda wait function-updated \
+    --function-name "${LAMBDA_FUNCTION_NAME}" \
+    --region "${REGION}"
+
+  # Keep runtime pinned (Node 24+ requires async handlers; see seo-router.js).
+  echo "Ensuring Lambda runtime is ${LAMBDA_RUNTIME}..."
+  aws lambda update-function-configuration \
+    --function-name "${LAMBDA_FUNCTION_NAME}" \
+    --runtime "${LAMBDA_RUNTIME}" \
+    --region "${REGION}" \
+    --output text >/dev/null
+
+  echo "Waiting for Lambda configuration update..."
+  aws lambda wait function-updated \
+    --function-name "${LAMBDA_FUNCTION_NAME}" \
+    --region "${REGION}"
 fi
 
 # ---------------------------------------------------------------------------
@@ -139,6 +157,18 @@ if [ -z "${LAMBDA_VERSION_ARN}" ]; then
 fi
 
 LAMBDA_VERSION="${LAMBDA_VERSION_ARN##*:}"
+
+# CloudFront needs explicit invoke permission on the published version.
+echo "Granting CloudFront permission to invoke ${LAMBDA_VERSION_ARN}..."
+STATEMENT_ID="allow-cloudfront-${LAMBDA_VERSION}"
+aws lambda add-permission \
+  --function-name "${LAMBDA_VERSION_ARN}" \
+  --statement-id "${STATEMENT_ID}" \
+  --action lambda:InvokeFunction \
+  --principal edgelambda.amazonaws.com \
+  --source-arn "arn:aws:cloudfront::$(aws sts get-caller-identity --query Account --output text):distribution/${DISTRIBUTION_ID}" \
+  --region "${REGION}" 2>/dev/null \
+  || echo "  Invoke permission already exists for version ${LAMBDA_VERSION}."
 
 # ---------------------------------------------------------------------------
 # 5. Update CloudFront distribution (associate Lambda@Edge)
