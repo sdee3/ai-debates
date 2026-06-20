@@ -9,6 +9,7 @@ function requireViteEnv(name: keyof ImportMetaEnv): string {
 export const env = {
   convexUrl: requireViteEnv("VITE_CONVEX_URL"),
   convexSiteUrl: requireViteEnv("VITE_CONVEX_SITE_URL"),
+  identityConvexUrl: requireViteEnv("VITE_IDENTITY_CONVEX_URL"),
   clerkPublishableKey: requireViteEnv("VITE_CLERK_PUBLISHABLE_KEY"),
   clerkSignInUrl: requireViteEnv("VITE_CLERK_SIGN_IN_URL"),
   clerkSignUpUrl: requireViteEnv("VITE_CLERK_SIGN_UP_URL"),
