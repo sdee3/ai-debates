@@ -1,11 +1,10 @@
 import { useAuth } from "@clerk/react"
 import { useQuery } from "convex/react"
-import { Link } from "react-router-dom"
 import { identityApi } from "../lib/identity-api"
 import { IdentityConvexScope } from "../lib/identityConvex"
 import { useIdentityUserReady } from "../lib/identityUserSync"
 
-function CreditsBadgeInner() {
+function CreditsBalanceTextInner() {
   const { isSignedIn } = useAuth()
   const identityReady = useIdentityUserReady()
   const balance = useQuery(
@@ -19,27 +18,23 @@ function CreditsBadgeInner() {
 
   if (balance === undefined) {
     return (
-      <span className="rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground">
+      <p className="border-b border-border px-4 py-2 text-sm text-muted-foreground">
         Credits…
-      </span>
+      </p>
     )
   }
 
   return (
-    <Link
-      to="/credits"
-      className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary hover:bg-primary/15 transition-colors"
-      title="SDEE3 credits balance"
-    >
+    <p className="border-b border-border px-4 py-2 text-sm text-muted-foreground">
       {balance.balance.toLocaleString()} credits
-    </Link>
+    </p>
   )
 }
 
-export function CreditsBadge() {
+export function CreditsBalanceText() {
   return (
     <IdentityConvexScope>
-      <CreditsBadgeInner />
+      <CreditsBalanceTextInner />
     </IdentityConvexScope>
   )
 }

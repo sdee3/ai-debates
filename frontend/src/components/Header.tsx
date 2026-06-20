@@ -4,7 +4,7 @@ import { Bot, LogOut, Coins } from "lucide-react"
 import { useAuth, useClerk } from "@clerk/react"
 import { useConvexAuth } from "convex/react"
 import { buildIdentitySignInUrl } from "./AuthGate"
-import { CreditsBadge } from "./CreditsBadge"
+import { CreditsBalanceText } from "./CreditsBadge"
 
 export default function Header() {
   const { isSignedIn } = useAuth()
@@ -47,7 +47,6 @@ export default function Header() {
         <div className="flex items-center space-x-4">
           {isSignedIn && isAuthenticated ? (
             <>
-              <CreditsBadge />
               <div ref={menuRef} className="relative">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -85,6 +84,7 @@ export default function Header() {
                 </button>
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-popover shadow-lg overflow-hidden">
+                    <CreditsBalanceText />
                     <Link
                       to="/credits"
                       onClick={() => setMenuOpen(false)}
