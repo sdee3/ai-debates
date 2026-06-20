@@ -44,6 +44,17 @@ export type PaginatedLedger = {
 }
 
 export const identityApi = {
+  users: {
+    upsertFromClient: makeFunctionReference<
+      "mutation",
+      {
+        email: string
+        name?: string
+        imageUrl?: string
+      },
+      string
+    >("users:upsertFromClient"),
+  },
   credits: {
     queries: {
       getBalance: makeFunctionReference<
@@ -82,6 +93,18 @@ export const identityApi = {
     },
   },
 } as const satisfies {
+  users: {
+    upsertFromClient: FunctionReference<
+      "mutation",
+      "public",
+      {
+        email: string
+        name?: string
+        imageUrl?: string
+      },
+      string
+    >
+  }
   credits: {
     queries: {
       getBalance: FunctionReference<

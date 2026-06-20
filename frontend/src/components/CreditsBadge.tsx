@@ -3,12 +3,14 @@ import { useQuery } from "convex/react"
 import { Link } from "react-router-dom"
 import { identityApi } from "../lib/identity-api"
 import { IdentityConvexScope } from "../lib/identityConvex"
+import { useIdentityUserReady } from "../lib/identityUserSync"
 
 function CreditsBadgeInner() {
   const { isSignedIn } = useAuth()
+  const identityReady = useIdentityUserReady()
   const balance = useQuery(
     identityApi.credits.queries.getBalance,
-    isSignedIn ? {} : "skip",
+    isSignedIn && identityReady ? {} : "skip",
   )
 
   if (!isSignedIn) {

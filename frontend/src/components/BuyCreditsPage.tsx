@@ -10,6 +10,7 @@ import {
   type CreditPriceKey,
 } from "../lib/identity-api"
 import { IdentityConvexScope } from "../lib/identityConvex"
+import { useIdentityUserReady } from "../lib/identityUserSync"
 
 function formatUsd(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -68,14 +69,15 @@ export function BuyCreditsPage() {
 
 function BuyCreditsPageInner() {
   const { isSignedIn } = useAuth()
+  const identityReady = useIdentityUserReady()
   const catalog = useQuery(identityApi.credits.products.getCatalog, {})
   const balance = useQuery(
     identityApi.credits.queries.getBalance,
-    isSignedIn ? {} : "skip",
+    isSignedIn && identityReady ? {} : "skip",
   )
   const ledger = useQuery(
     identityApi.credits.queries.listLedger,
-    isSignedIn
+    isSignedIn && identityReady
       ? { paginationOpts: { numItems: 25, cursor: null } }
       : "skip",
   )
@@ -93,7 +95,7 @@ function BuyCreditsPageInner() {
   const returnUrl = `${window.location.origin}${window.location.pathname}`
 
   async function startCheckout(priceKey: PriceKey) {
-    if (!isSignedIn) {
+    if (!isSignedIn || !identityReady) {
       window.location.href = buildIdentitySignInUrl(returnUrl)
       return
     }
