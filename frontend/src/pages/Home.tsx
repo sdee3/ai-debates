@@ -1,20 +1,12 @@
 import { useState, useMemo } from "react"
 import type { DebateResponse } from "../store/useDebateStore"
 import { useQuery, usePaginatedQuery, useMutation } from "convex/react"
-import { api } from "@convex-api"
+import { api } from "@convex/api"
+import type { Doc } from "@convex/dataModel"
 import { HeroSection } from "../components/HeroSection"
 import { DebateList } from "../components/DebateList"
 import { SEO } from "../components/SEO"
 import { Loader2 } from "lucide-react"
-
-interface ConvexDebateDoc {
-  _id: string
-  _creationTime: number
-  topic: string
-  responses: Array<DebateResponse>
-  isPublic: boolean
-  userId: string
-}
 
 function deriveDebateStatus(responses: Array<DebateResponse>): "pending" | "in-progress" | "completed" {
   if (responses.every((r) => r.status === "completed" || r.status === "error"))
@@ -24,7 +16,7 @@ function deriveDebateStatus(responses: Array<DebateResponse>): "pending" | "in-p
   return "pending"
 }
 
-function convertConvexDocToDebate(doc: ConvexDebateDoc) {
+function convertConvexDocToDebate(doc: Doc<"debates">) {
   const modelIds = doc.responses.map((r) => r.modelId)
   return {
     id: doc._id,
@@ -39,7 +31,7 @@ function convertConvexDocToDebate(doc: ConvexDebateDoc) {
     })),
     status: deriveDebateStatus(doc.responses as DebateResponse[]),
     createdAt: doc._creationTime,
-    isPublic: doc.isPublic,
+    isPublic: doc.isPublic ?? false,
     userId: doc.userId,
   }
 }
@@ -70,12 +62,15 @@ export default function Home() {
     return (latestDebates ?? []).map(convertConvexDocToDebate)
   }, [showAll, results, latestDebates])
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDelete = async (
+    e: React.MouseEvent,
+    id: Doc<"debates">["_id"],
+  ) => {
     e.preventDefault()
     e.stopPropagation()
     if (window.confirm("Are you sure you want to delete this debate?")) {
       try {
-        await deleteDebateMutation({ id: id as any })
+        await deleteDebateMutation({ id })
       } catch (err: unknown) {
         console.error("Failed to delete debate:", err)
       }

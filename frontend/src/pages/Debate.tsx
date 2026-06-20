@@ -3,7 +3,8 @@ import ReactMarkdown from "react-markdown"
 import rehypeSanitize from "rehype-sanitize"
 import { useDebateStore } from "../store/useDebateStore"
 import { useQuery, useMutation } from "convex/react"
-import { api } from "@convex-api"
+import { api } from "@convex/api"
+import type { Id } from "@convex/dataModel"
 import { useDebateRunner } from "../hooks/useDebateRunner"
 import { useModels } from "../hooks/useModels"
 import { useConvexAuth } from "convex/react"
@@ -46,7 +47,9 @@ export default function Debate() {
 
   const debateById = useQuery(
     api.queries.getDebate,
-    slugOrId && debateBySlug === null ? ({ id: slugOrId } as any) : "skip"
+    slugOrId && debateBySlug === null
+      ? { id: slugOrId as Id<"debates"> }
+      : "skip",
   )
 
   const doc = debateBySlug !== undefined ? (debateBySlug ?? debateById) : undefined
@@ -59,7 +62,7 @@ export default function Debate() {
   const handleTogglePublic = async () => {
     if (!resolvedId) return
     try {
-      await togglePublic({ id: resolvedId as any })
+      await togglePublic({ id: resolvedId })
     } catch (err) {
       console.error("Failed to toggle visibility:", err)
     }
@@ -318,9 +321,10 @@ export default function Debate() {
           <h3 className="text-sm font-medium text-foreground/60 uppercase tracking-wider">Actions</h3>
           <button
             onClick={async () => {
+              if (!resolvedId) return
               if (window.confirm("Are you sure you want to delete this debate?")) {
                 try {
-                  await deleteDebate({ id: resolvedId as any })
+                  await deleteDebate({ id: resolvedId })
                   navigate("/")
                 } catch (err) {
                   console.error("Failed to delete debate:", err)

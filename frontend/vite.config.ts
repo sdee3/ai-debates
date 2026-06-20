@@ -42,7 +42,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@convex-api": path.resolve(__dirname, "src/lib/convex-api.ts"),
+      "@convex": path.resolve(__dirname, "../backend/convex/_generated"),
     },
   },
   build: {

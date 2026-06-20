@@ -1,6 +1,7 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { api } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 const SITE_URL = "https://ai-debate.sdee3.com";
 
 const http = httpRouter();
@@ -31,7 +32,7 @@ http.route({
     }
 
     const modelNames = debate.responses
-      .map((r) => r.modelId)
+      .map((r: Doc<"debates">["responses"][number]) => r.modelId)
       .slice(0, 3)
       .join(", ");
 
@@ -96,7 +97,7 @@ http.route({
       { loc: `${SITE_URL}/credits`, priority: "0.3", changefreq: "monthly" },
     ];
 
-    const debateUrls = debates.map((d) => ({
+    const debateUrls = debates.map((d: Doc<"debates">) => ({
       loc: `${SITE_URL}/debate/${d._id}`,
       lastmod: new Date(d._creationTime).toISOString().split("T")[0],
       priority: "0.6",

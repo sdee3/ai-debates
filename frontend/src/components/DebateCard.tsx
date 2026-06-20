@@ -2,9 +2,11 @@ import { Link } from "react-router-dom"
 import { Clock, X, Globe, Lock } from "lucide-react"
 import type { Debate } from "../store/useDebateStore"
 
+import type { Id } from "@convex/dataModel"
+
 interface DebateCardProps {
   debate: Debate
-  onDelete: (e: React.MouseEvent, id: string) => void
+  onDelete: (e: React.MouseEvent, id: Id<"debates">) => void
 }
 
 export function DebateCard({ debate, onDelete }: DebateCardProps) {

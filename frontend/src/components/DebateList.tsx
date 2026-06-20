@@ -1,9 +1,10 @@
 import type { Debate } from "../store/useDebateStore"
+import type { Id } from "@convex/dataModel"
 import { DebateCard } from "./DebateCard"
 
 interface DebateListProps {
   debates: Debate[]
-  onDelete: (e: React.MouseEvent, id: string) => void
+  onDelete: (e: React.MouseEvent, id: Id<"debates">) => void
   showAll?: boolean
   onShowAll?: () => void
 }

@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import type { Id } from "@convex/dataModel"
 
 export interface DebateResponse {
   modelId: string
@@ -9,7 +10,7 @@ export interface DebateResponse {
 }
 
 export interface Debate {
-  id: string
+  id: Id<"debates">
   topic: string
   fullTopic?: string
   modelIds: string[]

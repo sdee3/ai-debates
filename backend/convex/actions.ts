@@ -1,3 +1,4 @@
+import type { Id } from "./_generated/dataModel"
 import { action } from "./_generated/server"
 import { v } from "convex/values"
 import { api } from "./_generated/api"
@@ -101,7 +102,7 @@ export const createDebateWithSummary = action({
     modelIds: v.array(v.string()),
     isPublic: v.optional(v.boolean()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ id: Id<"debates">; slug: string }> => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Not authenticated")
 

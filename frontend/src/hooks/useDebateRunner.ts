@@ -1,10 +1,11 @@
 import { useEffect, useRef, useCallback } from "react"
 import { useAction, useMutation, useQuery } from "convex/react"
-import { api } from "@convex-api"
+import { api } from "@convex/api"
+import type { Id } from "@convex/dataModel"
 import { useDebateStore } from "../store/useDebateStore"
 import type { DebateResponse } from "../store/useDebateStore"
 
-export function useDebateRunner(debateId: string | null) {
+export function useDebateRunner(debateId: Id<"debates"> | null) {
   const generateCompletion = useAction(api.actions.generateCompletion)
   const updateResponses = useMutation(api.mutations.updateResponses)
   const { setCurrentDebate, updateCurrentDebate, updateResponse } =
@@ -13,7 +14,7 @@ export function useDebateRunner(debateId: string | null) {
 
   const doc = useQuery(
     api.queries.getDebate,
-    debateId ? ({ id: debateId } as any) : "skip"
+    debateId ? { id: debateId } : "skip",
   )
 
   const syncToStore = useCallback(() => {
@@ -52,7 +53,7 @@ export function useDebateRunner(debateId: string | null) {
     if (!doc || !debateId || runningRef.current) return
 
     const hasPending = (doc.responses as DebateResponse[]).some(
-      (r) => r.status === "pending"
+      (r) => r.status === "pending",
     )
     if (!hasPending) return
 
@@ -72,7 +73,7 @@ export function useDebateRunner(debateId: string | null) {
           const data = await generateCompletion({
             model: resp.modelId,
             messages: [{ role: "user", content: prompt }],
-            debateId: debateId as any,
+            debateId: doc._id,
           })
 
           const content = data.choices?.[0]?.message?.content || ""
@@ -113,7 +114,7 @@ export function useDebateRunner(debateId: string | null) {
       await Promise.all(promises)
 
       try {
-        await updateResponses({ id: debateId as any, responses })
+        await updateResponses({ id: doc._id, responses })
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Failed to save"
         console.error("Failed to persist responses:", message)

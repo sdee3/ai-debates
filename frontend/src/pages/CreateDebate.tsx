@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAction } from "convex/react"
-import { api } from "@convex-api"
+import { api } from "@convex/api"
 import { SEO } from "../components/SEO"
 import { useModels } from "../hooks/useModels"
 import ModelSelector from "../components/ModelSelector"
