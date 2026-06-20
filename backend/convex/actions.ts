@@ -1,6 +1,11 @@
 import { action } from "./_generated/server"
 import { v } from "convex/values"
 import { api } from "./_generated/api"
+import {
+  DEBATES_LLM_CREDIT_COST,
+  debitCreditsForUser,
+  isCreditsEnforcementEnabled,
+} from "./lib/credits"
 
 // OPENROUTER_API_KEY is a sensitive environment variable set in Convex dashboard
 // and backend/.env.local. It must NOT be logged, exposed to clients, or committed.
@@ -14,6 +19,7 @@ export const generateCompletion = action({
   args: {
     model: v.string(),
     messages: v.array(v.object({ role: v.string(), content: v.string() })),
+    debateId: v.optional(v.id("debates")),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -28,6 +34,27 @@ export const generateCompletion = action({
       await ctx.runMutation(api.rateLimit.checkRateLimit, { action: "generateCompletion" })
     } catch (err) {
       if (err instanceof Error && err.message.startsWith("Rate limited")) throw err
+    }
+
+    if (isCreditsEnforcementEnabled()) {
+      const idempotencyKey = args.debateId
+        ? `debates:llm:${args.debateId}:${args.model}`
+        : `debates:llm:${identity.subject}:${args.model}:${msg[0].content.slice(0, 120)}`
+      try {
+        await debitCreditsForUser({
+          clerkUserId: identity.subject,
+          amount: DEBATES_LLM_CREDIT_COST,
+          reason: "debates.llm_response",
+          idempotencyKey,
+          metadata: { model: args.model, debateId: args.debateId },
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Insufficient credits"
+        if (message.includes("Insufficient")) {
+          throw new Error("Insufficient credits")
+        }
+        throw err
+      }
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY

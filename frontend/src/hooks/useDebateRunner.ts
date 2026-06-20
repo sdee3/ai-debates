@@ -72,6 +72,7 @@ export function useDebateRunner(debateId: string | null) {
           const data = await generateCompletion({
             model: resp.modelId,
             messages: [{ role: "user", content: prompt }],
+            debateId: debateId as any,
           })
 
           const content = data.choices?.[0]?.message?.content || ""
