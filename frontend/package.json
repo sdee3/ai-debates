@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@clerk/react": "^6.7.1",
+    "@sdee3/credits": "file:../../identity/packages/credits",
     "@tailwindcss/typography": "^0.5.19",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

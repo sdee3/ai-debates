@@ -6,6 +6,7 @@ import {
   DEBATES_LLM_CREDIT_COST,
   debitCreditsForUser,
   isCreditsEnforcementEnabled,
+  refundLlmDebit,
 } from "./lib/credits"
 
 // OPENROUTER_API_KEY is a sensitive environment variable set in Convex dashboard
@@ -25,6 +26,7 @@ export const generateCompletion = action({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) throw new Error("Not authenticated")
+    const clerkUserId = identity.subject
 
     const msg = args.messages
     if (msg.length !== 1 || msg[0].role !== "user" || msg[0].content.length > 10000) {
@@ -37,18 +39,22 @@ export const generateCompletion = action({
       if (err instanceof Error && err.message.startsWith("Rate limited")) throw err
     }
 
+    let debited = false
+    const idempotencyKey = args.debateId
+      ? `debates:llm:${args.debateId}:${args.model}`
+      : `debates:llm:${clerkUserId}:${args.model}:${msg[0].content.slice(0, 120)}`
+    const debitMetadata = { model: args.model, debateId: args.debateId }
+
     if (isCreditsEnforcementEnabled()) {
-      const idempotencyKey = args.debateId
-        ? `debates:llm:${args.debateId}:${args.model}`
-        : `debates:llm:${identity.subject}:${args.model}:${msg[0].content.slice(0, 120)}`
       try {
         await debitCreditsForUser({
-          clerkUserId: identity.subject,
+          clerkUserId,
           amount: DEBATES_LLM_CREDIT_COST,
           reason: "debates.llm_response",
           idempotencyKey,
-          metadata: { model: args.model, debateId: args.debateId },
+          metadata: debitMetadata,
         })
+        debited = true
       } catch (err) {
         const message = err instanceof Error ? err.message : "Insufficient credits"
         if (message.includes("Insufficient")) {
@@ -58,36 +64,64 @@ export const generateCompletion = action({
       }
     }
 
+    async function refundIfDebited(): Promise<void> {
+      if (!debited) {
+        return
+      }
+      await refundLlmDebit({
+        clerkUserId,
+        amount: DEBATES_LLM_CREDIT_COST,
+        creditReason: "debates.llm_response",
+        debitIdempotencyKey: idempotencyKey,
+        metadata: debitMetadata,
+      })
+    }
+
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) throw new Error("OPENROUTER_API_KEY not set")
 
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "https://ai-debate.sdee3.com",
-          "X-Title": "AI Debate",
+    let data: unknown
+    try {
+      const response = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://ai-debate.sdee3.com",
+            "X-Title": "AI Debate",
+          },
+          body: JSON.stringify({
+            model: args.model,
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              ...args.messages,
+            ],
+          }),
         },
-        body: JSON.stringify({
-          model: args.model,
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            ...args.messages,
-          ],
-        }),
-      },
-    )
+      )
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}))
-      throw new Error(error.error?.message || "OpenRouter API error")
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}))
+        throw new Error(error.error?.message || "OpenRouter API error")
+      }
+
+      data = await response.json()
+    } catch (err) {
+      if (debited) {
+        await refundIfDebited()
+      }
+      throw err
     }
 
-    const data = await response.json()
-    await ctx.runMutation(api.audit.logAuditEvent, { action: "completion.generated", details: args.model })
+    try {
+      await ctx.runMutation(api.audit.logAuditEvent, { action: "completion.generated", details: args.model })
+    } catch (err) {
+      await refundIfDebited()
+      throw err
+    }
+
     return data
   },
 })

@@ -3,14 +3,15 @@ import { useAction, useQuery } from "convex/react"
 import { Loader2 } from "lucide-react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { buildIdentitySignInUrl } from "./AuthGate"
+import { buildIdentitySignInUrl } from "../lib/identitySetup"
 import {
   identityApi,
+  IdentityConvexScope,
+  identityConvex,
+  useIdentityUserReady,
   type CreditLedgerEntry,
   type CreditPriceKey,
-} from "../lib/identity-api"
-import { IdentityConvexScope } from "../lib/identityConvex"
-import { useIdentityUserReady } from "../lib/identityUserSync"
+} from "../lib/identitySetup"
 
 function formatUsd(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -61,7 +62,7 @@ function appLabel(appSlug: CreditLedgerEntry["appSlug"]): string | null {
 
 export function BuyCreditsPage() {
   return (
-    <IdentityConvexScope>
+    <IdentityConvexScope identityConvex={identityConvex}>
       <BuyCreditsPageInner />
     </IdentityConvexScope>
   )

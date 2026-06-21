@@ -4,6 +4,11 @@ import { api } from "@convex/api"
 import type { Id } from "@convex/dataModel"
 import { useDebateStore } from "../store/useDebateStore"
 import type { DebateResponse } from "../store/useDebateStore"
+import { refreshCreditsBalance } from "../lib/identitySetup"
+
+type CompletionResponse = {
+  choices?: Array<{ message?: { content?: string } }>
+}
 
 export function useDebateRunner(debateId: Id<"debates"> | null) {
   const generateCompletion = useAction(api.actions.generateCompletion)
@@ -70,11 +75,11 @@ export function useDebateRunner(debateId: Id<"debates"> | null) {
         updateResponse(resp.modelId, { status: "loading" })
 
         try {
-          const data = await generateCompletion({
+          const data = (await generateCompletion({
             model: resp.modelId,
             messages: [{ role: "user", content: prompt }],
             debateId: doc._id,
-          })
+          })) as CompletionResponse
 
           const content = data.choices?.[0]?.message?.content || ""
           const rankingMatch = content.match(/RANKING:\s*(\d)/i)
@@ -97,7 +102,9 @@ export function useDebateRunner(debateId: Id<"debates"> | null) {
             ranking,
             status: "completed",
           })
+          void refreshCreditsBalance()
         } catch (err: unknown) {
+          void refreshCreditsBalance()
           const message = err instanceof Error ? err.message : "Unknown error"
           responses[index] = {
             ...resp,

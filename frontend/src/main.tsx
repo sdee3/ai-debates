@@ -7,8 +7,12 @@ import { ConvexReactClient } from "convex/react"
 import "./index.css"
 import App from "./App.tsx"
 import { env } from "./lib/env"
-import { IdentityConvexAuthSync } from "./lib/identityConvex"
-import { IdentityUserReadyProvider } from "./lib/identityUserSync"
+import {
+  identityApi,
+  IdentityConvexAuthSync,
+  identityConvex,
+  IdentityUserReadyProvider,
+} from "./lib/identitySetup"
 
 const convex = new ConvexReactClient(env.convexUrl)
 
@@ -26,9 +30,12 @@ createRoot(document.getElementById("root")!).render(
       ]}
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        <IdentityConvexAuthSync />
+        <IdentityConvexAuthSync identityConvex={identityConvex} />
         <HelmetProvider>
-          <IdentityUserReadyProvider>
+          <IdentityUserReadyProvider
+            upsertFromClient={identityApi.users.upsertFromClient}
+            identityConvex={identityConvex}
+          >
             <App />
           </IdentityUserReadyProvider>
         </HelmetProvider>

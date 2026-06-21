@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { Bot, LogOut, Coins } from "lucide-react"
 import { useAuth, useClerk } from "@clerk/react"
 import { useConvexAuth } from "convex/react"
-import { buildIdentitySignInUrl } from "./AuthGate"
+import { buildIdentitySignInUrl } from "../lib/identitySetup"
 import { CreditsBalanceText } from "./CreditsBadge"
 
 export default function Header() {

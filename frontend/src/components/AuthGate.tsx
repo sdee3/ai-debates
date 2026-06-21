@@ -1,78 +1,14 @@
 import { useAuth } from "@clerk/react"
-import { useSignIn } from "@clerk/react/legacy"
 import { useConvexAuth } from "convex/react"
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 import { Loader2 } from "lucide-react"
-import { env } from "../lib/env"
+import {
+  readSignInTicket,
+  useSignInTokenHandoff,
+} from "@sdee3/credits"
+import { buildIdentitySignInUrl } from "../lib/identitySetup"
 
-const APP_SLUG = "debates"
-
-export function buildIdentitySignInUrl(redirectUrl?: string): string {
-  const base = env.clerkSignInUrl
-  const params = new URLSearchParams({
-    app: APP_SLUG,
-    redirect_url:
-      redirectUrl ??
-      `${window.location.origin}${window.location.pathname}${window.location.search}`,
-  })
-  return `${base}?${params.toString()}`
-}
-
-type HandoffState = "idle" | "pending" | "done" | "error"
-
-function useSignInTokenHandoff(): HandoffState {
-  const ticket = useMemo(
-    () => new URLSearchParams(window.location.search).get("token"),
-    [],
-  )
-  const { isLoaded: clerkLoaded, isSignedIn } = useAuth()
-  const { signIn, setActive, isLoaded: signInLoaded } = useSignIn()
-  const [state, setState] = useState<HandoffState>(ticket ? "pending" : "idle")
-  const ran = useRef(false)
-
-  useEffect(() => {
-    if (!ticket) {
-      setState("idle")
-      return
-    }
-    if (
-      !clerkLoaded ||
-      !signInLoaded ||
-      !signIn ||
-      !setActive ||
-      isSignedIn ||
-      ran.current
-    ) {
-      return
-    }
-    ran.current = true
-    setState("pending")
-
-    void (async () => {
-      try {
-        const attempt = await signIn.create({
-          strategy: "ticket",
-          ticket,
-        })
-        if (attempt.status === "complete" && attempt.createdSessionId) {
-          await setActive({ session: attempt.createdSessionId })
-          const url = new URL(window.location.href)
-          url.searchParams.delete("token")
-          const next =
-            url.pathname + (url.search ? url.search : "") + url.hash
-          window.history.replaceState({}, "", next)
-          setState("done")
-          return
-        }
-        setState("error")
-      } catch {
-        setState("error")
-      }
-    })()
-  }, [ticket, clerkLoaded, signInLoaded, signIn, setActive, isSignedIn])
-
-  return ticket ? state : "idle"
-}
+export { buildIdentitySignInUrl }
 
 function AuthLoading({ message = "Loading..." }: { message?: string }) {
   return (
@@ -114,7 +50,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const redirectStarted = useRef(false)
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("token")) {
+    if (readSignInTicket()) {
       return
     }
     if (!clerkLoaded || isSignedIn || redirectStarted.current) {

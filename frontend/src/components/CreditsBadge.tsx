@@ -1,8 +1,11 @@
 import { useAuth } from "@clerk/react"
 import { useQuery } from "convex/react"
-import { identityApi } from "../lib/identity-api"
-import { IdentityConvexScope } from "../lib/identityConvex"
-import { useIdentityUserReady } from "../lib/identityUserSync"
+import {
+  identityApi,
+  IdentityConvexScope,
+  identityConvex,
+  useIdentityUserReady,
+} from "../lib/identitySetup"
 
 function CreditsBalanceTextInner() {
   const { isSignedIn } = useAuth()
@@ -33,7 +36,7 @@ function CreditsBalanceTextInner() {
 
 export function CreditsBalanceText() {
   return (
-    <IdentityConvexScope>
+    <IdentityConvexScope identityConvex={identityConvex}>
       <CreditsBalanceTextInner />
     </IdentityConvexScope>
   )
