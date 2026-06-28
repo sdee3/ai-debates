@@ -26,6 +26,7 @@ createRoot(document.getElementById("root")!).render(
         window.location.origin,
         "https://identity.sdee3.com",
         "https://ai-debate.sdee3.com",
+        "https://winning-jaybird-28.accounts.dev",
         "http://localhost:5173",
       ]}
     >
