@@ -9,11 +9,6 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp"
-    ]
-  },
   "dependencies": {
     "@clerk/react": "^6.7.1",
     "@sdee3/credits": "file:../../identity/packages/credits",
