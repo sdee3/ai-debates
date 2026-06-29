@@ -85,12 +85,7 @@ function BuyCreditsPageInner() {
   const createCheckout = useAction(
     identityApi.credits.stripeCheckout.createCheckoutSession,
   )
-  const createPortal = useAction(
-    identityApi.credits.stripeCheckout.createBillingPortalSession,
-  )
-  const [loadingKey, setLoadingKey] = useState<PriceKey | "portal" | null>(
-    null,
-  )
+  const [loadingKey, setLoadingKey] = useState<PriceKey | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const returnUrl = `${window.location.origin}${window.location.pathname}`
@@ -112,20 +107,6 @@ function BuyCreditsPageInner() {
       window.location.href = url
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed")
-      setLoadingKey(null)
-    }
-  }
-
-  async function openPortal() {
-    setLoadingKey("portal")
-    setError(null)
-    try {
-      const { url } = await createPortal({ returnUrl })
-      window.location.href = url
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not open billing portal",
-      )
       setLoadingKey(null)
     }
   }
@@ -196,58 +177,18 @@ function BuyCreditsPageInner() {
               ) : null}
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-                  Monthly subscriptions
-                </h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {catalog.subscriptions.map((product) => (
-                    <ProductCard
-                      key={product.key}
-                      title={product.label}
-                      subtitle={`${formatUsd(product.priceUsd)} / month`}
-                      description={product.description}
-                      loading={loadingKey === product.key}
-                      onBuy={() => void startCheckout(product.key)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-                  One-time packs
-                </h3>
-                <div className="grid gap-3">
-                  {catalog.packs.map((product) => (
-                    <ProductCard
-                      key={product.key}
-                      title={product.label}
-                      subtitle={formatUsd(product.priceUsd)}
-                      description={product.description}
-                      loading={loadingKey === product.key}
-                      onBuy={() => void startCheckout(product.key)}
-                    />
-                  ))}
-                </div>
-              </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {catalog.packs.map((product) => (
+                <ProductCard
+                  key={product.key}
+                  title={product.label}
+                  subtitle={formatUsd(product.priceUsd)}
+                  description={product.description}
+                  loading={loadingKey === product.key}
+                  onBuy={() => void startCheckout(product.key)}
+                />
+              ))}
             </div>
-
-            {isSignedIn ? (
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => void openPortal()}
-                  disabled={loadingKey === "portal"}
-                  className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline disabled:opacity-50 cursor-pointer"
-                >
-                  {loadingKey === "portal"
-                    ? "Opening…"
-                    : "Manage subscription"}
-                </button>
-              </div>
-            ) : null}
           </section>
 
           {isSignedIn ? (
