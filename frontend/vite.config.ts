@@ -3,6 +3,40 @@ import react from "@vitejs/plugin-react"
 import { VitePWA } from "vite-plugin-pwa"
 import path from "path"
 
+function vendorChunk(id: string): string | undefined {
+  if (!id.includes("node_modules")) return undefined
+
+  if (id.includes("node_modules/convex/")) return "convex-vendor"
+  if (id.includes("node_modules/@clerk/")) return "clerk-vendor"
+  if (
+    id.includes("@sdee3/credits") ||
+    id.includes("identity/packages/credits")
+  ) {
+    return "identity-vendor"
+  }
+  if (id.includes("framer-motion") || id.includes("lucide-react")) {
+    return "ui-vendor"
+  }
+  if (
+    id.includes("cmdk") ||
+    id.includes("clsx") ||
+    id.includes("tailwind-merge") ||
+    id.includes("zustand")
+  ) {
+    return "utils-vendor"
+  }
+  if (
+    id.includes("node_modules/react/") ||
+    id.includes("node_modules/react-dom/") ||
+    id.includes("node_modules/react-router") ||
+    id.includes("node_modules/react-helmet")
+  ) {
+    return "react-vendor"
+  }
+
+  return undefined
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   envPrefix: ["VITE_"],
@@ -48,11 +82,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router-dom"],
-          "ui-vendor": ["framer-motion", "lucide-react"],
-          "utils-vendor": ["clsx", "tailwind-merge", "zustand", "cmdk"],
-        },
+        manualChunks: vendorChunk,
       },
     },
   },

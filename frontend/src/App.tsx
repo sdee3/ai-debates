@@ -1,13 +1,23 @@
+import { lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
-import { AuthGate } from "./components/AuthGate"
 import Header from "./components/Header"
 import ReloadPrompt from "./components/ReloadPrompt"
 import { ErrorBoundary } from "./components/ErrorBoundary"
-import Home from "./pages/Home"
-import CreateDebate from "./pages/CreateDebate"
-import Debate from "./pages/Debate"
-import Credits from "./pages/Credits"
-import NotFound from "./pages/NotFound"
+import { DebateLoadError } from "./components/DebateLoadError"
+import PageLoader from "./components/PageLoader"
+
+const Home = lazy(() => import("./pages/Home"))
+const CreateDebate = lazy(() => import("./pages/CreateDebate"))
+const Debate = lazy(() => import("./pages/Debate"))
+const Credits = lazy(() => import("./pages/Credits"))
+const NotFound = lazy(() => import("./pages/NotFound"))
+const AuthGate = lazy(() =>
+  import("./components/AuthGate").then((m) => ({ default: m.AuthGate })),
+)
+
+function LazyRoute({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
+}
 
 function App() {
   return (
@@ -16,18 +26,50 @@ function App() {
         <Header />
         <main className="container mx-auto px-4 py-8">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route
+              path="/"
+              element={
+                <LazyRoute>
+                  <Home />
+                </LazyRoute>
+              }
+            />
             <Route
               path="/create"
               element={
-                <AuthGate>
-                  <CreateDebate />
-                </AuthGate>
+                <LazyRoute>
+                  <AuthGate>
+                    <CreateDebate />
+                  </AuthGate>
+                </LazyRoute>
               }
             />
-            <Route path="/debate/:slugOrId" element={<ErrorBoundary fallback={<NotFound />}><Debate /></ErrorBoundary>} />
-            <Route path="/credits" element={<Credits />} />
-            <Route path="*" element={<NotFound />} />
+            <Route
+              path="/debate/:slugOrId"
+              element={
+                <ErrorBoundary fallback={<DebateLoadError />}>
+                  <LazyRoute>
+                    <Debate />
+                  </LazyRoute>
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/credits"
+              element={
+                <LazyRoute>
+                  <Credits />
+                </LazyRoute>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                <LazyRoute>
+                  <NotFound />
+                </LazyRoute>
+              }
+            />
           </Routes>
         </main>
         <ReloadPrompt />
