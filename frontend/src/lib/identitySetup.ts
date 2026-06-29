@@ -7,7 +7,18 @@ import {
   IdentityUserReadyProvider,
   useIdentityUserReady,
 } from "@sdee3/credits";
-import { env } from "./env";
+
+const identityConvexUrl = import.meta.env.VITE_IDENTITY_CONVEX_URL as
+  | string
+  | undefined;
+
+if (import.meta.env.PROD && !identityConvexUrl) {
+  throw new Error(
+    "Missing VITE_IDENTITY_CONVEX_URL in production. Credits require the Identity Convex deployment URL.",
+  );
+}
+
+export const identityConvex = createIdentityConvexClient(identityConvexUrl);
 
 export {
   identityApi,
@@ -25,12 +36,14 @@ export type {
   CreditPriceKey,
 } from "@sdee3/credits";
 
-export const identityConvex = createIdentityConvexClient(env.identityConvexUrl);
+const IDENTITY_SIGN_IN_URL =
+  import.meta.env.VITE_CLERK_SIGN_IN_URL ??
+  "https://identity.sdee3.com/sign-in";
 
 export function buildIdentitySignInUrl(redirectUrl?: string): string {
   return buildHubSignInUrl({
     app: "debates",
-    signInBaseUrl: env.clerkSignInUrl,
+    signInBaseUrl: IDENTITY_SIGN_IN_URL,
     redirectUrl,
   });
 }

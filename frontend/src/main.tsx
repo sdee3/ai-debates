@@ -1,12 +1,11 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { HelmetProvider } from "react-helmet-async"
-import { ClerkProvider, useAuth } from "@clerk/react"
-import { ConvexProviderWithClerk } from "convex/react-clerk"
+import { ClerkProvider } from "@clerk/react"
 import { ConvexReactClient } from "convex/react"
 import "./index.css"
 import App from "./App.tsx"
-import { env } from "./lib/env"
+import { ConvexProviderWithClerkTemplate } from "./lib/convexClerkAuth"
 import {
   identityApi,
   IdentityConvexAuthSync,
@@ -14,33 +13,47 @@ import {
   IdentityUserReadyProvider,
 } from "./lib/identitySetup"
 
-const convex = new ConvexReactClient(env.convexUrl)
+const convexUrl = import.meta.env.VITE_CONVEX_URL as string
+const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string
+const signInUrl = import.meta.env.VITE_CLERK_SIGN_IN_URL as string
+const signUpUrl = import.meta.env.VITE_CLERK_SIGN_UP_URL as string
+
+if (!convexUrl || !publishableKey || !signInUrl || !signUpUrl) {
+  throw new Error(
+    "Missing VITE_CONVEX_URL, VITE_CLERK_PUBLISHABLE_KEY, VITE_CLERK_SIGN_IN_URL, or VITE_CLERK_SIGN_UP_URL. Copy env vars into frontend/.env.local",
+  )
+}
+
+const convex = new ConvexReactClient(convexUrl)
+
+function Root() {
+  return (
+    <IdentityUserReadyProvider
+      upsertFromClient={identityApi.users.upsertFromClient}
+      identityConvex={identityConvex}
+    >
+      <HelmetProvider>
+        <App />
+      </HelmetProvider>
+    </IdentityUserReadyProvider>
+  )
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ClerkProvider
-      publishableKey={env.clerkPublishableKey}
-      signInUrl={env.clerkSignInUrl}
-      signUpUrl={env.clerkSignUpUrl}
+      publishableKey={publishableKey}
       allowedRedirectOrigins={[
-        window.location.origin,
         "https://identity.sdee3.com",
         "https://ai-debate.sdee3.com",
         "https://winning-jaybird-28.accounts.dev",
         "http://localhost:5173",
       ]}
     >
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+      <ConvexProviderWithClerkTemplate client={convex}>
         <IdentityConvexAuthSync identityConvex={identityConvex} />
-        <HelmetProvider>
-          <IdentityUserReadyProvider
-            upsertFromClient={identityApi.users.upsertFromClient}
-            identityConvex={identityConvex}
-          >
-            <App />
-          </IdentityUserReadyProvider>
-        </HelmetProvider>
-      </ConvexProviderWithClerk>
+        <Root />
+      </ConvexProviderWithClerkTemplate>
     </ClerkProvider>
   </StrictMode>,
 )

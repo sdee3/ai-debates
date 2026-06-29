@@ -4,8 +4,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/.env"
 
-echo "=== Building frontend ==="
-pnpm --dir ./frontend build
+echo "=== Building frontend (production env from frontend/.env.production) ==="
+pnpm --dir ./frontend build --mode production
 
 echo ""
 echo "=== Emptying S3 bucket: s3://${BUCKET} ==="
