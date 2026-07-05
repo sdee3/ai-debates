@@ -23,16 +23,17 @@ export default defineSchema({
       }),
     ),
   }).index("by_user", ["userId"]),
-  debateRateLimits: defineTable({
-    clerkUserId: v.string(),
-    action: v.string(),
-    lastInvokedAt: v.number(),
-  }).index("by_user_action", ["clerkUserId", "action"]),
   auditLogs: defineTable({
     userId: v.string(),
     action: v.string(),
     debateId: v.optional(v.id("debates")),
     details: v.optional(v.string()),
+    metadata: v.optional(v.record(v.string(), v.union(v.string(), v.number(), v.boolean()))),
     timestamp: v.number(),
   }).index("by_timestamp", ["timestamp"]),
+  actionRateLimits: defineTable({
+    key: v.string(),
+    attempts: v.number(),
+    windowStart: v.number(),
+  }).index("by_key", ["key"]),
 });

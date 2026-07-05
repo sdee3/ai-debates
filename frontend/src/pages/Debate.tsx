@@ -55,7 +55,7 @@ export default function Debate() {
   const doc = debateBySlug !== undefined ? (debateBySlug ?? debateById) : undefined
   const resolvedId = doc?._id ?? null
 
-  useDebateRunner(resolvedId)
+  useDebateRunner(resolvedId, viewerId)
 
   const isOwner = currentDebate && viewerId && currentDebate.userId === viewerId
 
