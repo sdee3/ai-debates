@@ -1,13 +1,16 @@
 import type { Id } from "./_generated/dataModel"
 import { action } from "./_generated/server"
 import { v } from "convex/values"
-import { api } from "./_generated/api"
+import { internal } from "./_generated/api"
+import { logAuditFromAction } from "./lib/auditLog"
 import {
+  DEBATES_CREATE_AUX_CREDIT_COST,
   DEBATES_LLM_CREDIT_COST,
-  debitCreditsForUser,
+  debitCreditsOrThrow,
   isCreditsEnforcementEnabled,
   refundLlmDebit,
 } from "./lib/credits"
+import { enforceRateLimit, RATE_LIMITS } from "./lib/rateLimit"
 
 // OPENROUTER_API_KEY is a sensitive environment variable set in Convex dashboard
 // and backend/.env.local. It must NOT be logged, exposed to clients, or committed.
@@ -17,6 +20,38 @@ Please provide your perspective on the given topic.
 You must start your response with a ranking on a scale of 1 to 5, where 1 is Strongly Disagree and 5 is Strongly Agree.
 Format: "RANKING: <number>" followed by a new line and then your argument.`
 
+function hashTopic(topic: string): string {
+  let hash = 0
+  for (let index = 0; index < topic.length; index += 1) {
+    hash = (hash * 31 + topic.charCodeAt(index)) >>> 0
+  }
+  return hash.toString(36)
+}
+
+function buildCompletionIdempotencyKey(args: {
+  clerkUserId: string
+  debateId?: Id<"debates">
+  model: string
+  messageContent: string
+}): string {
+  const scope = args.debateId ?? "adhoc"
+  const contentHash = hashTopic(args.messageContent.slice(0, 120))
+  return `debates:llm:${args.clerkUserId}:${scope}:${args.model}:${contentHash}`
+}
+
+async function assertDebateOwnerForAction(
+  ctx: Parameters<typeof enforceRateLimit>[0],
+  debateId: Id<"debates">,
+  clerkUserId: string,
+): Promise<void> {
+  const ownerId = await ctx.runQuery(internal.lib.debateAuth.getDebateOwnerId, {
+    id: debateId,
+  })
+  if (!ownerId || ownerId !== clerkUserId) {
+    throw new Error("Not authorized")
+  }
+}
+
 export const generateCompletion = action({
   args: {
     model: v.string(),
@@ -24,48 +59,35 @@ export const generateCompletion = action({
     debateId: v.optional(v.id("debates")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Not authenticated")
-    const clerkUserId = identity.subject
+    const clerkUserId = await enforceRateLimit(ctx, RATE_LIMITS.generateCompletion)
 
     const msg = args.messages
     if (msg.length !== 1 || msg[0].role !== "user" || msg[0].content.length > 10000) {
       throw new Error("Invalid message format")
     }
 
-    try {
-      await ctx.runMutation(api.rateLimit.checkRateLimit, { action: "generateCompletion" })
-    } catch (err) {
-      if (err instanceof Error && err.message.startsWith("Rate limited")) throw err
+    if (args.debateId) {
+      await assertDebateOwnerForAction(ctx, args.debateId, clerkUserId)
     }
 
-    let debited = false
-    const idempotencyKey = args.debateId
-      ? `debates:llm:${args.debateId}:${args.model}`
-      : `debates:llm:${clerkUserId}:${args.model}:${msg[0].content.slice(0, 120)}`
+    const idempotencyKey = buildCompletionIdempotencyKey({
+      clerkUserId,
+      debateId: args.debateId,
+      model: args.model,
+      messageContent: msg[0].content,
+    })
     const debitMetadata = { model: args.model, debateId: args.debateId }
 
-    if (isCreditsEnforcementEnabled()) {
-      try {
-        await debitCreditsForUser({
-          clerkUserId,
-          amount: DEBATES_LLM_CREDIT_COST,
-          reason: "debates.llm_response",
-          idempotencyKey,
-          metadata: debitMetadata,
-        })
-        debited = true
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Insufficient credits"
-        if (message.includes("Insufficient")) {
-          throw new Error("Insufficient credits")
-        }
-        throw err
-      }
-    }
+    const { chargedThisCall } = await debitCreditsOrThrow({
+      clerkUserId,
+      amount: DEBATES_LLM_CREDIT_COST,
+      reason: "debates.llm_response",
+      idempotencyKey,
+      metadata: debitMetadata,
+    })
 
-    async function refundIfDebited(): Promise<void> {
-      if (!debited) {
+    async function refundIfCharged(): Promise<void> {
+      if (!chargedThisCall) {
         return
       }
       await refundLlmDebit({
@@ -109,16 +131,19 @@ export const generateCompletion = action({
 
       data = await response.json()
     } catch (err) {
-      if (debited) {
-        await refundIfDebited()
-      }
+      await refundIfCharged()
       throw err
     }
 
     try {
-      await ctx.runMutation(api.audit.logAuditEvent, { action: "completion.generated", details: args.model })
+      await logAuditFromAction(ctx, {
+        action: "completion.generated",
+        userId: clerkUserId,
+        debateId: args.debateId,
+        details: args.model,
+      })
     } catch (err) {
-      await refundIfDebited()
+      await refundIfCharged()
       throw err
     }
 
@@ -137,22 +162,36 @@ export const createDebateWithSummary = action({
     isPublic: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<{ id: Id<"debates">; slug: string }> => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Not authenticated")
+    const clerkUserId = await enforceRateLimit(ctx, RATE_LIMITS.createDebateWithSummary)
 
     const cleanTopic = sanitizeHtml(args.topic).trim()
     if (!cleanTopic) throw new Error("Topic cannot be empty")
     if (cleanTopic.length > 5000) throw new Error("Topic exceeds 5000 character limit")
     const cleanFullTopic = sanitizeHtml(args.topic).trim()
 
-    try {
-      await ctx.runMutation(api.rateLimit.checkRateLimit, { action: "createDebateWithSummary" })
-    } catch (err) {
-      if (err instanceof Error && err.message.startsWith("Rate limited")) throw err
-    }
-
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) throw new Error("OPENROUTER_API_KEY not set")
+
+    const createAuxKey = `debates:create-aux:${clerkUserId}:${hashTopic(cleanTopic)}`
+    const { chargedThisCall: chargedCreateAux } = await debitCreditsOrThrow({
+      clerkUserId,
+      amount: DEBATES_CREATE_AUX_CREDIT_COST,
+      reason: "debates.create_aux",
+      idempotencyKey: createAuxKey,
+      metadata: { topicLength: cleanTopic.length },
+    })
+
+    async function refundCreateAux(): Promise<void> {
+      if (!chargedCreateAux || !isCreditsEnforcementEnabled()) {
+        return
+      }
+      await refundLlmDebit({
+        clerkUserId,
+        amount: DEBATES_CREATE_AUX_CREDIT_COST,
+        creditReason: "debates.create_aux",
+        debitIdempotencyKey: createAuxKey,
+      })
+    }
 
     // LLM-based prompt injection classifier (fail-open)
     try {
@@ -176,6 +215,7 @@ export const createDebateWithSummary = action({
         const classifyData = await classifyResponse.json()
         const classification = classifyData.choices?.[0]?.message?.content?.trim()
         if (classification === "BLOCKED") {
+          await refundCreateAux()
           throw new Error("Topic blocked: potential prompt injection detected")
         }
       }
@@ -221,17 +261,25 @@ export const createDebateWithSummary = action({
       console.warn("Failed to summarize topic, using original:", err)
     }
 
-    return await ctx.runMutation(api.mutations.createDebate, {
-      topic: title,
-      fullTopic,
-      modelIds: args.modelIds,
-      isPublic: args.isPublic,
-    })
+    try {
+      return await ctx.runMutation(internal.mutations.createDebate, {
+        topic: title,
+        fullTopic,
+        modelIds: args.modelIds,
+        isPublic: args.isPublic,
+        clerkUserId,
+      })
+    } catch (err) {
+      await refundCreateAux()
+      throw err
+    }
   },
 })
 
 export const fetchModels = action({
-  handler: async () => {
+  handler: async (ctx) => {
+    await enforceRateLimit(ctx, RATE_LIMITS.fetchModels)
+
     const apiKey = process.env.OPENROUTER_API_KEY
     if (!apiKey) throw new Error("OPENROUTER_API_KEY not set")
     const response = await fetch("https://openrouter.ai/api/v1/models/user", {

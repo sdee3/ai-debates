@@ -10,7 +10,10 @@ type CompletionResponse = {
   choices?: Array<{ message?: { content?: string } }>
 }
 
-export function useDebateRunner(debateId: Id<"debates"> | null) {
+export function useDebateRunner(
+  debateId: Id<"debates"> | null,
+  ownerId: string | null | undefined,
+) {
   const generateCompletion = useAction(api.actions.generateCompletion)
   const updateResponses = useMutation(api.mutations.updateResponses)
   const { setCurrentDebate, updateCurrentDebate, updateResponse } =
@@ -56,6 +59,7 @@ export function useDebateRunner(debateId: Id<"debates"> | null) {
 
   useEffect(() => {
     if (!doc || !debateId || runningRef.current) return
+    if (!ownerId || doc.userId !== ownerId) return
 
     const hasPending = (doc.responses as DebateResponse[]).some(
       (r) => r.status === "pending",
@@ -132,6 +136,5 @@ export function useDebateRunner(debateId: Id<"debates"> | null) {
     }
 
     runDebate()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debateId, doc?._id])
+  }, [debateId, doc?._id, doc?.userId, ownerId, generateCompletion, updateResponses, updateCurrentDebate, updateResponse, doc])
 }

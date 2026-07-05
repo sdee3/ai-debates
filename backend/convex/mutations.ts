@@ -1,7 +1,7 @@
-import { mutation } from "./_generated/server";
+import { internalMutation, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireClerkUserId } from "./lib/auth";
-import { api } from "./_generated/api";
+import { logAuditFromMutation } from "./lib/auditLog";
 
 function sanitizeHtml(text: string): string {
   return text.replace(/<[^>]*>/g, "");
@@ -16,15 +16,15 @@ function validateAndSanitizeTopic(topic: string, fullTopic?: string): { topic: s
   return { topic: cleanTopic, fullTopic: cleanFullTopic };
 }
 
-export const createDebate = mutation({
+export const createDebate = internalMutation({
   args: {
     topic: v.string(),
     fullTopic: v.optional(v.string()),
     modelIds: v.array(v.string()),
     isPublic: v.optional(v.boolean()),
+    clerkUserId: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireClerkUserId(ctx);
     const { topic, fullTopic } = validateAndSanitizeTopic(args.topic, args.fullTopic);
     const responses = args.modelIds.map((modelId) => ({
       modelId,
@@ -33,7 +33,7 @@ export const createDebate = mutation({
       status: "pending" as const,
     }));
     const id = await ctx.db.insert("debates", {
-      userId,
+      userId: args.clerkUserId,
       topic,
       fullTopic,
       isPublic: args.isPublic ?? false,
@@ -41,7 +41,11 @@ export const createDebate = mutation({
     });
     const slug = `${topic.slice(0, 40).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '').toLowerCase()}-${id}`
     await ctx.db.patch(id, { slug })
-    await ctx.runMutation(api.audit.logAuditEvent, { action: "debate.created", debateId: id });
+    await logAuditFromMutation(ctx, {
+      action: "debate.created",
+      userId: args.clerkUserId,
+      debateId: id,
+    });
     return { id, slug };
   },
 });
@@ -56,7 +60,12 @@ export const togglePublicDebate = mutation({
     }
     const newVisibility = !(debate.isPublic ?? false);
     await ctx.db.patch(args.id, { isPublic: newVisibility });
-    await ctx.runMutation(api.audit.logAuditEvent, { action: "debate.visibility_toggled", debateId: args.id, details: String(newVisibility) });
+    await logAuditFromMutation(ctx, {
+      action: "debate.visibility_toggled",
+      userId,
+      debateId: args.id,
+      details: String(newVisibility),
+    });
   },
 });
 
@@ -85,7 +94,11 @@ export const updateResponses = mutation({
       throw new Error("Not authorized");
     }
     await ctx.db.patch(args.id, { responses: args.responses });
-    await ctx.runMutation(api.audit.logAuditEvent, { action: "debate.responses_updated", debateId: args.id });
+    await logAuditFromMutation(ctx, {
+      action: "debate.responses_updated",
+      userId,
+      debateId: args.id,
+    });
   },
 });
 
@@ -98,6 +111,10 @@ export const deleteDebate = mutation({
       throw new Error("Not authorized");
     }
     await ctx.db.delete(args.id);
-    await ctx.runMutation(api.audit.logAuditEvent, { action: "debate.deleted", debateId: args.id });
+    await logAuditFromMutation(ctx, {
+      action: "debate.deleted",
+      userId,
+      debateId: args.id,
+    });
   },
 });
