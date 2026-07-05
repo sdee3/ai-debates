@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/react"
 import { useQuery } from "convex/react"
 import {
+  creditsEnabled,
   identityApi,
   IdentityConvexScope,
   identityConvex,
@@ -35,6 +36,9 @@ function CreditsBalanceTextInner() {
 }
 
 export function CreditsBalanceText() {
+  if (!creditsEnabled) {
+    return null
+  }
   return (
     <IdentityConvexScope identityConvex={identityConvex}>
       <CreditsBalanceTextInner />

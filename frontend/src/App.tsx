@@ -1,10 +1,11 @@
 import { lazy, Suspense } from "react"
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Header from "./components/Header"
 import ReloadPrompt from "./components/ReloadPrompt"
 import { ErrorBoundary } from "./components/ErrorBoundary"
 import { DebateLoadError } from "./components/DebateLoadError"
 import PageLoader from "./components/PageLoader"
+import { creditsEnabled } from "./lib/identitySetup"
 
 const Home = lazy(() => import("./pages/Home"))
 const CreateDebate = lazy(() => import("./pages/CreateDebate"))
@@ -57,9 +58,13 @@ function App() {
             <Route
               path="/credits"
               element={
-                <LazyRoute>
-                  <Credits />
-                </LazyRoute>
+                creditsEnabled ? (
+                  <LazyRoute>
+                    <Credits />
+                  </LazyRoute>
+                ) : (
+                  <Navigate to="/" replace />
+                )
               }
             />
             <Route

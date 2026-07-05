@@ -16,10 +16,7 @@ import { refreshCreditsBalance } from "../lib/identitySetup"
  * whatever state the backend has produced — they can never trigger or alter
  * generation.
  */
-export function useDebateRunner(
-  debateId: Id<"debates"> | null,
-  ownerId: string | null | undefined,
-) {
+export function useDebateRunner(debateId: Id<"debates"> | null) {
   const { setCurrentDebate } = useDebateStore()
   const creditedRef = useRef(false)
 

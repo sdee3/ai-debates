@@ -7,6 +7,7 @@ import "./index.css"
 import App from "./App.tsx"
 import { ConvexProviderWithClerkTemplate } from "./lib/convexClerkAuth"
 import {
+  creditsEnabled,
   identityApi,
   IdentityConvexAuthSync,
   identityConvex,
@@ -27,6 +28,18 @@ if (!convexUrl || !publishableKey || !signInUrl || !signUpUrl) {
 const convex = new ConvexReactClient(convexUrl)
 
 function Root() {
+  // Credits/identity integration is only mounted when wired to a real
+  // Identity Convex deployment (PROD). Locally we skip mounting the
+  // providers entirely so they never fire `users:upsertFromClient` /
+  // `credits/*` calls that have no public function to back them.
+  if (!creditsEnabled) {
+    return (
+      <HelmetProvider>
+        <App />
+      </HelmetProvider>
+    )
+  }
+
   return (
     <IdentityUserReadyProvider
       upsertFromClient={identityApi.users.upsertFromClient}
@@ -51,7 +64,9 @@ createRoot(document.getElementById("root")!).render(
       ]}
     >
       <ConvexProviderWithClerkTemplate client={convex}>
-        <IdentityConvexAuthSync identityConvex={identityConvex} />
+        {creditsEnabled ? (
+          <IdentityConvexAuthSync identityConvex={identityConvex} />
+        ) : null}
         <Root />
       </ConvexProviderWithClerkTemplate>
     </ClerkProvider>

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { Bot, LogOut, Coins } from "lucide-react"
 import { useAuth, useClerk } from "@clerk/react"
 import { useConvexAuth } from "convex/react"
-import { buildIdentitySignInUrl } from "../lib/identitySetup"
+import { buildIdentitySignInUrl, creditsEnabled } from "../lib/identitySetup"
 import { CreditsBalanceText } from "./CreditsBadge"
 
 export default function Header() {
@@ -88,15 +88,17 @@ export default function Header() {
                 </button>
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-48 rounded-xl glass-strong overflow-hidden">
-                    <CreditsBalanceText />
-                    <Link
-                      to="/credits"
-                      onClick={() => setMenuOpen(false)}
-                      className="flex items-center space-x-2 px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                    >
-                      <Coins className="w-4 h-4" />
-                      <span>Credits</span>
-                    </Link>
+                    {creditsEnabled ? <CreditsBalanceText /> : null}
+                    {creditsEnabled ? (
+                      <Link
+                        to="/credits"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center space-x-2 px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <Coins className="w-4 h-4" />
+                        <span>Credits</span>
+                      </Link>
+                    ) : null}
                     <button
                       onClick={handleSignOut}
                       className="flex items-center space-x-2 w-full px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors border-t border-border cursor-pointer"
