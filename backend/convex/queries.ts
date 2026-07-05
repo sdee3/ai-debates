@@ -1,4 +1,4 @@
-import { query } from "./_generated/server";
+import { query, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { getClerkUserIdOrNull } from "./lib/auth";
@@ -73,5 +73,12 @@ export const listPublicDebates = query({
       .filter((q) => q.eq(q.field("isPublic"), true))
       .order("desc")
       .collect();
+  },
+});
+
+export const getDebateForRun = internalQuery({
+  args: { id: v.id("debates") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });

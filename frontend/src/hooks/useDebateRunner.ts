@@ -1,24 +1,27 @@
-import { useEffect, useRef, useCallback } from "react"
-import { useAction, useMutation, useQuery } from "convex/react"
+import { useEffect, useCallback, useRef } from "react"
+import { useQuery } from "convex/react"
 import { api } from "@convex/api"
 import type { Id } from "@convex/dataModel"
 import { useDebateStore } from "../store/useDebateStore"
 import type { DebateResponse } from "../store/useDebateStore"
 import { refreshCreditsBalance } from "../lib/identitySetup"
 
-type CompletionResponse = {
-  choices?: Array<{ message?: { content?: string } }>
-}
-
+/**
+ * useDebateRunner is a READ-ONLY sync from the Convex debate document into the
+ * local UI store. It never calls actions or mutations.
+ *
+ * Debate generation is fully backend-driven: `createDebate` schedules
+ * `runDebateResponses` (an internal action) which persists results via
+ * `setDebateResponse`. Page refreshes simply re-read the document and render
+ * whatever state the backend has produced — they can never trigger or alter
+ * generation.
+ */
 export function useDebateRunner(
   debateId: Id<"debates"> | null,
   ownerId: string | null | undefined,
 ) {
-  const generateCompletion = useAction(api.actions.generateCompletion)
-  const updateResponses = useMutation(api.mutations.updateResponses)
-  const { setCurrentDebate, updateCurrentDebate, updateResponse } =
-    useDebateStore()
-  const runningRef = useRef(false)
+  const { setCurrentDebate } = useDebateStore()
+  const creditedRef = useRef(false)
 
   const doc = useQuery(
     api.queries.getDebate,
@@ -57,84 +60,16 @@ export function useDebateRunner(
     syncToStore()
   }, [syncToStore])
 
-  useEffect(() => {
-    if (!doc || !debateId || runningRef.current) return
-    if (!ownerId || doc.userId !== ownerId) return
-
-    const hasPending = (doc.responses as DebateResponse[]).some(
-      (r) => r.status === "pending",
+  // Credits refresh is read-only (pulls latest balance from Identity) and does
+  // not touch debate state. Fire it once when the run finishes.
+  const finished =
+    !!doc &&
+    (doc.responses as DebateResponse[]).every(
+      (r) => r.status === "completed" || r.status === "error",
     )
-    if (!hasPending) return
-
-    const runDebate = async () => {
-      runningRef.current = true
-
-      const responses = [...doc.responses] as DebateResponse[]
-      const prompt = `Topic: "${doc.topic}"`
-
-      const promises = responses.map(async (resp, index) => {
-        if (resp.status !== "pending") return
-
-        responses[index] = { ...resp, status: "loading" }
-        updateResponse(resp.modelId, { status: "loading" })
-
-        try {
-          const data = (await generateCompletion({
-            model: resp.modelId,
-            messages: [{ role: "user", content: prompt }],
-            debateId: doc._id,
-          })) as CompletionResponse
-
-          const content = data.choices?.[0]?.message?.content || ""
-          const rankingMatch = content.match(/RANKING:\s*(\d)/i)
-          let ranking = 0
-          let cleanContent = content
-
-          if (rankingMatch) {
-            ranking = parseInt(rankingMatch[1], 10)
-            cleanContent = content.replace(/RANKING:\s*\d\s*/i, "").trim()
-          }
-
-          responses[index] = {
-            ...resp,
-            content: cleanContent,
-            ranking,
-            status: "completed",
-          }
-          updateResponse(resp.modelId, {
-            content: cleanContent,
-            ranking,
-            status: "completed",
-          })
-          void refreshCreditsBalance()
-        } catch (err: unknown) {
-          void refreshCreditsBalance()
-          const message = err instanceof Error ? err.message : "Unknown error"
-          responses[index] = {
-            ...resp,
-            status: "error",
-            error: message,
-          }
-          updateResponse(resp.modelId, {
-            status: "error",
-            error: message,
-          })
-        }
-      })
-
-      await Promise.all(promises)
-
-      try {
-        await updateResponses({ id: doc._id, responses })
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to save"
-        console.error("Failed to persist responses:", message)
-      }
-
-      updateCurrentDebate({ status: "completed" })
-      runningRef.current = false
-    }
-
-    runDebate()
-  }, [debateId, doc?._id, doc?.userId, ownerId, generateCompletion, updateResponses, updateCurrentDebate, updateResponse, doc])
+  useEffect(() => {
+    if (!finished || creditedRef.current) return
+    creditedRef.current = true
+    void refreshCreditsBalance()
+  }, [finished])
 }

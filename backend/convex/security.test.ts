@@ -37,25 +37,36 @@ async function seedDebate(
   })
 }
 
-test("updateResponses rejects non-owners", async () => {
+test("setDebateResponse updates a single response (internal only)", async () => {
   const t = convexTest(schema, modules)
   const debateId = await seedDebate(t, { userId: "owner_user" })
 
-  const asViewer = t.withIdentity({ subject: "viewer_user" })
+  await t.mutation(internal.mutations.setDebateResponse, {
+    debateId,
+    modelId: "openai/gpt-5.4",
+    content: "generated",
+    ranking: 4,
+    status: "completed",
+  })
 
-  await expect(
-    asViewer.mutation(api.mutations.updateResponses, {
-      id: debateId,
-      responses: [
-        {
-          modelId: "openai/gpt-5.4",
-          content: "hacked",
-          ranking: 3,
-          status: "completed",
-        },
-      ],
-    }),
-  ).rejects.toThrow("Not authorized")
+  const debate = await t.query(internal.queries.getDebateForRun, { id: debateId })
+  expect(debate?.responses[0]).toEqual({
+    modelId: "openai/gpt-5.4",
+    content: "generated",
+    ranking: 4,
+    status: "completed",
+  })
+})
+
+test("no public mutation exposes response mutation to clients", async () => {
+  // Defensive guard: ensures the public API surface never re-adds a
+  // client-callable mutation that writes debate responses. The frontend must
+  // only ever read debate state — generation is backend-owned.
+  const publicMutationNames = Object.keys(
+    (api as { mutations: Record<string, unknown> }).mutations,
+  )
+  expect(publicMutationNames).not.toContain("updateResponses")
+  expect(publicMutationNames).not.toContain("setDebateResponse")
 })
 
 test("getDebateOwnerId returns the debate owner", async () => {

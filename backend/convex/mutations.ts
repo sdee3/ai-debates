@@ -1,5 +1,6 @@
 import { internalMutation, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { requireClerkUserId } from "./lib/auth";
 import { logAuditFromMutation } from "./lib/auditLog";
 
@@ -30,7 +31,7 @@ export const createDebate = internalMutation({
       modelId,
       content: "",
       ranking: 0,
-      status: "pending" as const,
+      status: "loading" as const,
     }));
     const id = await ctx.db.insert("debates", {
       userId: args.clerkUserId,
@@ -46,7 +47,47 @@ export const createDebate = internalMutation({
       userId: args.clerkUserId,
       debateId: id,
     });
+    // Backend owns response generation: schedule the LLM run so the frontend
+    // can never trigger or re-trigger completions, regardless of refreshes.
+    await ctx.scheduler.runAfter(0, internal.actions.runDebateResponses, {
+      debateId: id,
+      clerkUserId: args.clerkUserId,
+    });
     return { id, slug };
+  },
+});
+
+export const setDebateResponse = internalMutation({
+  args: {
+    debateId: v.id("debates"),
+    modelId: v.string(),
+    content: v.string(),
+    ranking: v.float64(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("loading"),
+      v.literal("completed"),
+      v.literal("error"),
+    ),
+    error: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const debate = await ctx.db.get(args.debateId);
+    if (!debate) {
+      throw new Error("Debate not found");
+    }
+    const responses = debate.responses.map((r) =>
+      r.modelId === args.modelId
+        ? {
+            ...r,
+            content: args.content,
+            ranking: args.ranking,
+            status: args.status,
+            error: args.error,
+          }
+        : r,
+    );
+    await ctx.db.patch(args.debateId, { responses });
   },
 });
 
@@ -65,39 +106,6 @@ export const togglePublicDebate = mutation({
       userId,
       debateId: args.id,
       details: String(newVisibility),
-    });
-  },
-});
-
-export const updateResponses = mutation({
-  args: {
-    id: v.id("debates"),
-    responses: v.array(
-      v.object({
-        modelId: v.string(),
-        content: v.string(),
-        ranking: v.float64(),
-        status: v.union(
-          v.literal("pending"),
-          v.literal("loading"),
-          v.literal("completed"),
-          v.literal("error")
-        ),
-        error: v.optional(v.string()),
-      })
-    ),
-  },
-  handler: async (ctx, args) => {
-    const userId = await requireClerkUserId(ctx);
-    const debate = await ctx.db.get(args.id);
-    if (!debate || debate.userId !== userId) {
-      throw new Error("Not authorized");
-    }
-    await ctx.db.patch(args.id, { responses: args.responses });
-    await logAuditFromMutation(ctx, {
-      action: "debate.responses_updated",
-      userId,
-      debateId: args.id,
     });
   },
 });

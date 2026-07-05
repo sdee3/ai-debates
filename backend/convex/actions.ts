@@ -1,5 +1,5 @@
 import type { Id } from "./_generated/dataModel"
-import { action } from "./_generated/server"
+import { action, internalAction } from "./_generated/server"
 import { v } from "convex/values"
 import { internal } from "./_generated/api"
 import { logAuditFromAction } from "./lib/auditLog"
@@ -293,3 +293,170 @@ export const fetchModels = action({
     return filterTextDebateModels(data.data ?? [])
   },
 })
+
+/**
+ * Backend-owned debate generation.
+ *
+ * Scheduled by `createDebate`. Runs every pending/loading response for a debate
+ * server-side and persists results via `setDebateResponse`. The frontend has no
+ * way to trigger or re-trigger this: it only reads debate state via queries.
+ *
+ * Idempotent w.r.t. credit debits (key scoped to debateId + model + prompt hash)
+ * and skips responses that are already `completed`/`error`, so Convex retries of
+ * this scheduled action are safe and never regenerate already-finished work.
+ */
+export const runDebateResponses = internalAction({
+  args: {
+    debateId: v.id("debates"),
+    clerkUserId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const debate = await ctx.runQuery(internal.queries.getDebateForRun, {
+      id: args.debateId,
+    });
+    if (!debate || debate.userId !== args.clerkUserId) {
+      return;
+    }
+
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      // Mark every loading response as error so the UI isn't stuck forever.
+      await Promise.all(
+        debate.responses.map((resp) => {
+          if (resp.status === "completed" || resp.status === "error") {
+            return Promise.resolve();
+          }
+          return ctx.runMutation(internal.mutations.setDebateResponse, {
+            debateId: args.debateId,
+            modelId: resp.modelId,
+            content: "",
+            ranking: 0,
+            status: "error" as const,
+            error: "OPENROUTER_API_KEY not set",
+          });
+        }),
+      );
+      return;
+    }
+
+    const prompt = `Topic: "${debate.topic}"`;
+    const contentHash = hashTopic(prompt.slice(0, 120));
+
+    await Promise.all(
+      debate.responses.map(async (resp) => {
+        if (resp.status === "completed" || resp.status === "error") {
+          return;
+        }
+
+        const idempotencyKey = `debates:llm:${args.clerkUserId}:${args.debateId}:${resp.modelId}:${contentHash}`;
+        const debitMetadata = { model: resp.modelId, debateId: args.debateId };
+
+        let chargedThisCall = false;
+        try {
+          const outcome = await debitCreditsOrThrow({
+            clerkUserId: args.clerkUserId,
+            amount: DEBATES_LLM_CREDIT_COST,
+            reason: "debates.llm_response",
+            idempotencyKey,
+            metadata: debitMetadata,
+          });
+          chargedThisCall = outcome.chargedThisCall;
+        } catch (err) {
+          const message =
+            err instanceof Error ? err.message : "Insufficient credits";
+          await ctx.runMutation(internal.mutations.setDebateResponse, {
+            debateId: args.debateId,
+            modelId: resp.modelId,
+            content: "",
+            ranking: 0,
+            status: "error" as const,
+            error: message,
+          });
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://ai-debate.sdee3.com",
+                "X-Title": "AI Debate",
+              },
+              body: JSON.stringify({
+                model: resp.modelId,
+                messages: [
+                  { role: "system", content: SYSTEM_PROMPT },
+                  { role: "user", content: prompt },
+                ],
+              }),
+            },
+          );
+
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(
+              error.error?.message || "OpenRouter API error",
+            );
+          }
+
+          const data = await response.json();
+          const content =
+            data.choices?.[0]?.message?.content?.trim() || "";
+          const rankingMatch = content.match(/RANKING:\s*(\d)/i);
+          let ranking = 0;
+          let cleanContent = content;
+
+          if (rankingMatch) {
+            ranking = parseInt(rankingMatch[1], 10);
+            cleanContent = content
+              .replace(/RANKING:\s*\d\s*/i, "")
+              .trim();
+          }
+
+          try {
+            await logAuditFromAction(ctx, {
+              action: "completion.generated",
+              userId: args.clerkUserId,
+              debateId: args.debateId,
+              details: resp.modelId,
+            });
+          } catch (err) {
+            console.warn("Audit log failed:", err);
+          }
+
+          await ctx.runMutation(internal.mutations.setDebateResponse, {
+            debateId: args.debateId,
+            modelId: resp.modelId,
+            content: cleanContent,
+            ranking,
+            status: "completed" as const,
+          });
+        } catch (err) {
+          if (chargedThisCall) {
+            await refundLlmDebit({
+              clerkUserId: args.clerkUserId,
+              amount: DEBATES_LLM_CREDIT_COST,
+              creditReason: "debates.llm_response",
+              debitIdempotencyKey: idempotencyKey,
+              metadata: debitMetadata,
+            });
+          }
+          const message =
+            err instanceof Error ? err.message : "Failed to generate response";
+          await ctx.runMutation(internal.mutations.setDebateResponse, {
+            debateId: args.debateId,
+            modelId: resp.modelId,
+            content: "",
+            ranking: 0,
+            status: "error" as const,
+            error: message,
+          });
+        }
+      }),
+    );
+  },
+});
