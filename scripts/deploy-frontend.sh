@@ -237,7 +237,21 @@ configure_cloudfront_security_headers() {
   attach_response_headers_policy "${custom_policy_id}"
 }
 
+write_production_env() {
+  local env_file="${SCRIPT_DIR}/../frontend/.env.production"
+
+  cat > "${env_file}" <<EOF
+VITE_CONVEX_URL=${VITE_CONVEX_URL:-https://small-spaniel-691.convex.cloud}
+VITE_CONVEX_SITE_URL=${VITE_CONVEX_SITE_URL:-https://small-spaniel-691.convex.site}
+VITE_CLERK_PUBLISHABLE_KEY=${VITE_CLERK_PUBLISHABLE_KEY:-pk_live_Y2xlcmsuc2RlZTMuY29tJA}
+VITE_CLERK_SIGN_IN_URL=${VITE_CLERK_SIGN_IN_URL:-https://identity.sdee3.com/sign-in}
+VITE_CLERK_SIGN_UP_URL=${VITE_CLERK_SIGN_UP_URL:-https://identity.sdee3.com/sign-up}
+VITE_IDENTITY_CONVEX_URL=${VITE_IDENTITY_CONVEX_URL:-https://glad-snake-999.convex.cloud}
+EOF
+}
+
 echo "=== Building frontend (production env from frontend/.env.production) ==="
+write_production_env
 pnpm --dir ./frontend build --mode production
 
 echo ""
