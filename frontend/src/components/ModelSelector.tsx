@@ -32,7 +32,7 @@ export default function ModelSelector({
   )
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-2">
       <div className="flex flex-wrap gap-2">
         {selectedModels.map((modelId) => {
           const model = models.find((m) => m.id === modelId)
@@ -57,7 +57,7 @@ export default function ModelSelector({
       <div className="relative">
         <div
           className={cn(
-            "flex items-center justify-between w-full px-4 py-3 text-sm bg-background/50 border border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors",
+            "flex items-center justify-between w-full px-3 py-2.5 sm:px-4 sm:py-3 text-sm bg-background/50 border border-border rounded-lg sm:rounded-xl cursor-pointer hover:border-primary/50 transition-colors",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           onClick={() => !disabled && setOpen(!open)}

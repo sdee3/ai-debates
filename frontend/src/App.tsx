@@ -24,7 +24,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-background text-foreground font-sans antialiased relative">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto py-4 sm:py-6 lg:py-8">
           <Routes>
             <Route
               path="/"

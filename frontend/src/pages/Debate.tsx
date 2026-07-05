@@ -146,7 +146,7 @@ export default function Debate() {
   }
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 pb-6 sm:pb-12">
       <SEO
         title={seoTitle}
         description={seoDescription}
@@ -168,7 +168,7 @@ export default function Debate() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
           )}
-          <h1 className="text-2xl font-bold leading-tight break-words">
+          <h1 className="text-xl sm:text-2xl font-bold leading-tight break-words">
             {currentDebate.topic}
           </h1>
         </div>
@@ -189,13 +189,14 @@ export default function Debate() {
           {isOwner && (
             <button
               onClick={handleTogglePublic}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer ${
+              aria-pressed={currentDebate.isPublic}
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors cursor-pointer ${
                 currentDebate.isPublic ? "bg-green-500" : "bg-muted-foreground/30"
               }`}
             >
               <span
-                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                  currentDebate.isPublic ? "translate-x-[18px]" : "translate-x-1"
+                className={`block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+                  currentDebate.isPublic ? "translate-x-4" : "translate-x-1"
                 }`}
               />
             </button>
@@ -231,7 +232,7 @@ export default function Debate() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {currentDebate.modelIds.map((modelId, index) => {
           const response = currentDebate.responses.find(
             (r) => r.modelId === modelId
@@ -248,11 +249,11 @@ export default function Debate() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="flex flex-col h-full p-6 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-200 hover:border-primary/20"
+              className="flex flex-col h-full p-4 sm:p-6 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-200 hover:border-primary/20"
             >
-              <div className="flex items-center justify-between mb-4 pb-4 border-b border-border/50">
+              <div className="flex items-center justify-between mb-3 pb-3 sm:mb-4 sm:pb-4 border-b border-border/50">
                 <h3
-                  className="font-semibold text-lg truncate text-foreground/90"
+                  className="font-semibold text-base sm:text-lg truncate text-foreground/90"
                   title={getModelName(modelId)}
                 >
                   {getModelName(modelId)}
@@ -266,7 +267,7 @@ export default function Debate() {
               </div>
 
               {isLoading ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm space-y-3 min-h-[200px]">
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm space-y-2 sm:space-y-3 min-h-[140px] sm:min-h-[200px]">
                   <div className="w-8 h-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
                   <span className="animate-pulse">
                     Formulating arguments...
@@ -277,8 +278,8 @@ export default function Debate() {
                   {response?.error || "Failed to generate response"}
                 </div>
               ) : (
-                <div className="flex flex-col h-full space-y-4">
-                  <div className="flex items-center justify-between text-sm bg-secondary/30 p-2 rounded-lg">
+                <div className="flex flex-col h-full space-y-3 sm:space-y-4">
+                  <div className="flex items-center justify-between gap-2 text-sm bg-secondary/30 p-2 rounded-lg">
                     <span className="font-medium text-muted-foreground">
                       Verdict
                     </span>
@@ -294,17 +295,17 @@ export default function Debate() {
                   <div
                     ref={(el) => { contentRefs.current[modelId] = el }}
                     className={cn(
-                    "text-sm leading-relaxed text-muted-foreground prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-headings:text-foreground prose-a:text-primary scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent pr-2",
+                    "text-sm leading-relaxed text-muted-foreground prose prose-invert prose-sm max-w-none prose-p:leading-relaxed prose-headings:text-foreground prose-a:text-primary scrollbar-thin scrollbar-thumb-secondary scrollbar-track-transparent pr-1 sm:pr-2",
                     expandedResponses[modelId]
                       ? "flex-1 overflow-y-auto"
-                      : "max-h-[400px] overflow-hidden"
+                      : "max-h-[280px] sm:max-h-[400px] overflow-hidden"
                   )}>
                     <ReactMarkdown rehypePlugins={[rehypeSanitize]}>{response?.content || ""}</ReactMarkdown>
                   </div>
                   {!expandedResponses[modelId] && overflowingResponses[modelId] && (
                     <button
                       onClick={() => setExpandedResponses(prev => ({ ...prev, [modelId]: true }))}
-                      className="w-full mt-2 py-2 text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors text-center cursor-pointer"
+                      className="w-full mt-1 py-1.5 sm:py-2 text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors text-center cursor-pointer"
                     >
                       Show full response
                     </button>

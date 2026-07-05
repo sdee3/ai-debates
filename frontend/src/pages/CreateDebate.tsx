@@ -73,30 +73,32 @@ export default function CreateDebate() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 py-8">
+    <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
       <SEO
         title="Create a New Debate"
         description="Pick a topic, select AI models, and start a debate. Models will generate arguments and rank their agreement."
         canonical="/create"
         noIndex
       />
-      <div className="space-y-2 text-center">
-        <h1 className="text-4xl font-bold tracking-tight">Create New Debate</h1>
-        <p className="text-lg text-muted-foreground">
+      <div className="space-y-1 sm:space-y-1.5 text-center">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+          Create New Debate
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Define a topic and select AI models to debate it.
         </p>
       </div>
 
       {error && (
-        <div className="p-4 text-sm text-amber-400 bg-amber-500/10 rounded-xl border border-amber-500/20 flex items-center">
+        <div className="p-3 sm:p-4 text-sm text-amber-400 bg-amber-500/10 rounded-xl border border-amber-500/20 flex items-center">
           <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
           Could not load models from API. Popular models are still available
           below.
         </div>
       )}
 
-      <div className="space-y-8 bg-card/50 p-8 rounded-2xl border border-border/50 shadow-sm backdrop-blur-sm">
-        <div className="space-y-3">
+      <div className="space-y-5 sm:space-y-6 bg-card/50 p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl border border-border/50 shadow-sm backdrop-blur-sm">
+        <div className="space-y-1.5 sm:space-y-2">
           <label
             htmlFor="topic"
             className="text-sm font-medium text-foreground/80"
@@ -108,14 +110,14 @@ export default function CreateDebate() {
             value={topic}
             onChange={(e) => setTopic(e.target.value.slice(0, 5000))}
             placeholder="e.g., Artificial intelligence is a threat to humanity"
-            className="w-full min-h-[120px] p-4 bg-background/50 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-y placeholder:text-muted-foreground/50"
+            className="w-full min-h-[140px] sm:min-h-[120px] p-3 sm:p-4 bg-background/50 border border-border rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-y placeholder:text-muted-foreground/50 text-base leading-relaxed"
           />
           <div className="text-xs text-muted-foreground text-right">
             {topic.length}/5000
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-1.5 sm:space-y-2">
           <label className="text-sm font-medium text-foreground/80">
             Select Models{" "}
             <span className="text-muted-foreground ml-1">
@@ -139,7 +141,7 @@ export default function CreateDebate() {
           </p>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-foreground/80">
               Popular Models
@@ -172,7 +174,7 @@ export default function CreateDebate() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
             {POPULAR_MODELS.map((model) => {
               const isSelected = selectedModels.includes(model.id)
               return (
@@ -189,7 +191,7 @@ export default function CreateDebate() {
                     }
                   }}
                   className={cn(
-                    "flex items-center justify-center px-4 py-3 text-sm font-medium rounded-xl border transition-all duration-200 cursor-pointer",
+                    "flex items-center justify-center px-2.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl border transition-all duration-200 cursor-pointer",
                     isSelected
                       ? "bg-primary/10 border-primary text-primary shadow-sm"
                       : "bg-background/50 border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-accent/5",
@@ -202,18 +204,18 @@ export default function CreateDebate() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 bg-background/50 border border-border rounded-xl">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3 p-3 sm:p-4 bg-background/50 border border-border rounded-lg sm:rounded-xl">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             {isPublic ? (
-              <Globe className="w-5 h-5 text-green-500" />
+              <Globe className="h-5 w-5 shrink-0 text-green-500" />
             ) : (
-              <Lock className="w-5 h-5 text-muted-foreground" />
+              <Lock className="h-5 w-5 shrink-0 text-muted-foreground" />
             )}
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-foreground/80">
                 {isPublic ? "Public" : "Private"}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-pretty text-muted-foreground">
                 {isPublic
                   ? "Anyone with the link can view this debate"
                   : "Only you can see this debate"}
@@ -223,13 +225,14 @@ export default function CreateDebate() {
           <button
             type="button"
             onClick={() => setIsPublic(!isPublic)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+            aria-pressed={isPublic}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors cursor-pointer ${
               isPublic ? "bg-green-500" : "bg-muted-foreground/30"
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isPublic ? "translate-x-6" : "translate-x-1"
+              className={`block h-4 w-4 rounded-full bg-white transition-transform ${
+                isPublic ? "translate-x-5" : "translate-x-1"
               }`}
             />
           </button>
@@ -245,7 +248,7 @@ export default function CreateDebate() {
         <button
           onClick={handleCreate}
           disabled={creating}
-          className="w-full py-4 text-lg font-medium text-white transition-all duration-200 bg-primary rounded-xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 cursor-pointer"
+          className="w-full py-3 sm:py-3.5 text-base sm:text-lg font-medium text-white transition-all duration-200 bg-primary rounded-lg sm:rounded-xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed sm:hover:-translate-y-0.5 cursor-pointer"
         >
           {creating ? (
             <span className="flex items-center justify-center">
