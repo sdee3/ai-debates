@@ -10,10 +10,7 @@ export function isCreditsEnforcementEnabled(): boolean {
 }
 
 export function getCreditsServiceSecret(): string | undefined {
-  return (
-    process.env.CREDITS_SERVICE_SECRET_DEBATES ??
-    process.env.CREDITS_SERVICE_SECRET
-  );
+  return process.env.CREDITS_SERVICE_SECRET_DEBATES;
 }
 
 type ServiceCreditResult = {

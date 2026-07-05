@@ -13,8 +13,7 @@ describe("credits service secret hardening", () => {
     process.env = { ...originalEnv }
   })
 
-  it("prefers the Debates-specific service secret when present", async () => {
-    process.env.CREDITS_SERVICE_SECRET = "generic-secret"
+  it("uses the Debates-specific service secret", async () => {
     process.env.CREDITS_SERVICE_SECRET_DEBATES = "debates-secret"
 
     const fetchMock = vi.fn(async () =>
@@ -49,45 +48,23 @@ describe("credits service secret hardening", () => {
     )
   })
 
-  it("falls back to the shared secret when no Debates-specific secret is configured", async () => {
-    process.env.CREDITS_SERVICE_SECRET = "generic-secret"
+  it("throws when the Debates-specific service secret is missing", async () => {
     delete process.env.CREDITS_SERVICE_SECRET_DEBATES
 
-    const fetchMock = vi.fn(async () =>
-      new Response(
-        JSON.stringify({
-          ledgerEntryId: "entry-1",
-          balanceAfter: 1000,
-          duplicate: false,
-        }),
-        {
-          headers: { "Content-Type": "application/json" },
-        },
-      ),
-    )
-    vi.stubGlobal("fetch", fetchMock)
-
     const { debitCreditsForUser } = await import("./credits")
-    await debitCreditsForUser({
-      clerkUserId: "user_123",
-      amount: 200,
-      reason: "debates.llm_response",
-      idempotencyKey: "key-1",
-    })
-
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://identity.example/api/credits/debit",
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: "Bearer generic-secret",
-        }),
+    await expect(
+      debitCreditsForUser({
+        clerkUserId: "user_123",
+        amount: 200,
+        reason: "debates.llm_response",
+        idempotencyKey: "key-1",
       }),
-    )
+    ).rejects.toThrow(/not configured/i)
   })
 
   it("treats duplicate debits as not charged on this call", async () => {
     process.env.CREDITS_ENFORCEMENT = "true"
-    process.env.CREDITS_SERVICE_SECRET = "generic-secret"
+    process.env.CREDITS_SERVICE_SECRET_DEBATES = "debates-secret"
 
     vi.stubGlobal(
       "fetch",

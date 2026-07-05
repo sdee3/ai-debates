@@ -7,7 +7,7 @@
 | `CLERK_JWT_ISSUER_DOMAIN` | Yes | Must match production Clerk instance |
 | `OPENROUTER_API_KEY` | Yes | Server-only; never expose to clients |
 | `IDENTITY_CONVEX_SITE_URL` | Yes | Identity `.convex.site` URL for credits HTTP API |
-| `CREDITS_SERVICE_SECRET_DEBATES` | Yes | Per-app secret (Identity prod); fallback: `CREDITS_SERVICE_SECRET` |
+| `CREDITS_SERVICE_SECRET_DEBATES` | Yes | Must match Identity `CREDITS_SERVICE_SECRET_DEBATES` |
 | `CREDITS_ENFORCEMENT` | Yes | Must be `"true"` in production |
 
 ## Do not enable in production
