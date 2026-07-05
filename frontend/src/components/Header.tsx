@@ -7,8 +7,8 @@ import { buildIdentitySignInUrl } from "../lib/identitySetup"
 import { CreditsBalanceText } from "./CreditsBadge"
 
 export default function Header() {
-  const { isSignedIn } = useAuth()
-  const { isAuthenticated } = useConvexAuth()
+  const { isLoaded, isSignedIn } = useAuth()
+  const { isLoading: isConvexAuthLoading, isAuthenticated } = useConvexAuth()
   const { signOut } = useClerk()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -31,26 +31,30 @@ export default function Header() {
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full glass border-b border-white/5">
+      {/* subtle gradient accent line */}
+      <div
+        aria-hidden
+        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-violet/50 to-transparent"
+      />
       <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between">
         <Link
           to="/"
-          className="flex items-center space-x-2 text-xl font-bold hover:opacity-80 transition-opacity"
+          className="flex items-center hover:opacity-90 transition-opacity"
+          aria-label="AI Debate home"
         >
-          <div className="p-1.5 bg-primary/10 rounded-lg">
-            <Bot className="w-6 h-6 text-primary" />
+          <div className="relative p-1.5 rounded-xl bg-gradient-to-br from-accent-indigo/30 to-accent-pink/20 border border-white/10 shadow-[0_0_20px_-6px_rgba(99,102,241,0.6)]">
+            <Bot className="w-6 h-6 text-accent-indigo" />
           </div>
-          <span className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
-            AI Debate
-          </span>
         </Link>
         <div className="flex items-center space-x-4">
-          {isSignedIn && isAuthenticated ? (
+          {isLoaded && !isConvexAuthLoading ? (
+            isSignedIn && isAuthenticated ? (
             <>
               <div ref={menuRef} className="relative">
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-secondary transition-colors cursor-pointer"
+                  className="flex items-center justify-center w-11 h-11 rounded-full glass hover:border-accent-violet/40 transition-colors cursor-pointer"
                 >
                   <svg
                     width="28"
@@ -83,7 +87,7 @@ export default function Header() {
                   </svg>
                 </button>
                 {menuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-popover shadow-lg overflow-hidden">
+                  <div className="absolute right-0 mt-2 w-48 rounded-xl glass-strong overflow-hidden">
                     <CreditsBalanceText />
                     <Link
                       to="/credits"
@@ -116,7 +120,8 @@ export default function Header() {
             >
               Sign In
             </button>
-          )}
+          )
+          ) : null}
         </div>
       </div>
     </header>

@@ -179,7 +179,6 @@ export const createDebateWithSummary = action({
       amount: DEBATES_CREATE_AUX_CREDIT_COST,
       reason: "debates.create_aux",
       idempotencyKey: createAuxKey,
-      metadata: { topicLength: cleanTopic.length },
     })
 
     async function refundCreateAux(): Promise<void> {

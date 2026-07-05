@@ -2,28 +2,36 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --color-background: #09090b;
+  --color-background: #07060d;
   --color-foreground: #fafafa;
-  --color-primary: #3b82f6;
+  --color-primary: #6366f1;
   --color-primary-foreground: #ffffff;
-  --color-card: #18181b;
+  --color-card: #15131f;
   --color-card-foreground: #fafafa;
-  --color-popover: #09090b;
+  --color-popover: #0c0a14;
   --color-popover-foreground: #fafafa;
-  --color-secondary: #27272a;
+  --color-secondary: #1d1a2a;
   --color-secondary-foreground: #fafafa;
-  --color-muted: #27272a;
+  --color-muted: #1d1a2a;
   --color-muted-foreground: #a1a1aa;
-  --color-accent: #27272a;
+  --color-accent: #221d33;
   --color-accent-foreground: #fafafa;
-  --color-destructive: #ef4444;
+  --color-destructive: #f43f5e;
   --color-destructive-foreground: #fafafa;
-  --color-border: #27272a;
-  --color-input: #27272a;
-  --color-ring: #3b82f6;
+  --color-border: #2a2540;
+  --color-input: #2a2540;
+  --color-ring: #6366f1;
+
+  /* Accent gradient stops */
+  --color-accent-indigo: #6366f1;
+  --color-accent-violet: #a855f7;
+  --color-accent-pink: #ec4899;
+  --color-accent-teal: #22d3ee;
+  --color-accent-amber: #fbbf24;
+  --color-accent-emerald: #34d399;
 }
 
-/* Custom utilities if needed */
+/* Custom utilities */
 @utility container {
   margin-inline: auto;
   padding-inline: 1rem;
@@ -38,37 +46,92 @@
   }
 }
 
+/* Reusable glass surfaces */
+@utility glass {
+  background-color: color-mix(in oklab, var(--color-card) 55%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid color-mix(in oklab, white 8%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, white 8%, transparent),
+    0 8px 32px -12px rgb(0 0 0 / 0.5);
+}
+
+@utility glass-strong {
+  background-color: color-mix(in oklab, var(--color-popover) 70%, transparent);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid color-mix(in oklab, white 10%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklab, white 12%, transparent),
+    0 16px 48px -16px rgb(0 0 0 / 0.6);
+}
+
 :root {
   color-scheme: dark;
 }
 
 body {
   background-color: var(--color-background);
-  background-image: radial-gradient(
-    ellipse at top,
-    rgba(59, 130, 246, 0.15),
-    transparent 40%
-  );
+  background-image:
+    radial-gradient(60rem 60rem at 12% -10%, rgba(99, 102, 241, 0.18), transparent 55%),
+    radial-gradient(50rem 50rem at 95% 0%, rgba(236, 72, 153, 0.14), transparent 50%),
+    radial-gradient(70rem 60rem at 50% 110%, rgba(34, 211, 238, 0.10), transparent 60%),
+    radial-gradient(40rem 40rem at 100% 100%, rgba(168, 85, 247, 0.12), transparent 60%);
+  background-attachment: fixed;
   color: var(--color-foreground);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Subtle grain so flat areas don't band */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--color-secondary);
-  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.6), rgba(168, 85, 247, 0.6));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.9), rgba(236, 72, 153, 0.9));
+  background-clip: padding-box;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-muted-foreground);
+/* Selection */
+::selection {
+  background: color-mix(in oklab, var(--color-accent-violet) 35%, transparent);
+  color: #fff;
+}
+
+@keyframes float-glow {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.65; }
+  50% { transform: translate3d(0, -8px, 0) scale(1.06); opacity: 0.9; }
+}
+.animate-float-glow {
+  animation: float-glow 7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-glow { animation: none; }
 }

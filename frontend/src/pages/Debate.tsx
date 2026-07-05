@@ -131,9 +131,9 @@ export default function Debate() {
   }
 
   const getRankingColor = (ranking: number) => {
-    if (ranking <= 2) return "bg-red-500"
-    if (ranking === 3) return "bg-yellow-500"
-    return "bg-green-500"
+    if (ranking <= 2) return "bg-gradient-to-r from-rose-500 to-orange-500"
+    if (ranking === 3) return "bg-gradient-to-r from-amber-400 to-yellow-500"
+    return "bg-gradient-to-r from-emerald-400 to-teal-500"
   }
 
   const getRankingLabel = (ranking: number) => {
@@ -154,7 +154,7 @@ export default function Debate() {
         noIndex={!currentDebate.isPublic}
       />
       {!isAuthenticated && (
-        <div className="bg-secondary/50 border border-secondary text-secondary-foreground px-4 py-2 rounded-lg text-sm text-center mb-4">
+        <div className="glass px-4 py-2 rounded-2xl text-sm text-center mb-4 text-muted-foreground">
           Log in to create your own thread and let AI models debate
         </div>
       )}
@@ -175,12 +175,12 @@ export default function Debate() {
 
         <div className="flex items-center space-x-3 self-end lg:self-auto lg:shrink-0">
           {currentDebate.isPublic ? (
-            <span className="inline-flex items-center text-xs font-medium text-green-500 bg-green-500/10 px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center text-xs font-medium text-accent-emerald bg-accent-emerald/10 border border-accent-emerald/20 px-2.5 py-1 rounded-full">
               <Globe className="w-3 h-3 mr-1" />
               Public
             </span>
           ) : (
-            <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-secondary/50 px-2.5 py-1 rounded-full">
+            <span className="inline-flex items-center text-xs font-medium text-muted-foreground bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
               <Lock className="w-3 h-3 mr-1" />
               Private
             </span>
@@ -205,7 +205,7 @@ export default function Debate() {
           {currentDebate.isPublic && (
             <button
               onClick={handleCopyLink}
-              className="inline-flex items-center text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
+              className="inline-flex items-center text-xs font-medium text-accent-violet bg-accent-violet/10 border border-accent-violet/20 hover:bg-accent-violet/20 px-2.5 py-1 rounded-full transition-colors cursor-pointer"
             >
               {copied ? (
                 <>
@@ -224,7 +224,7 @@ export default function Debate() {
       </div>
 
       {currentDebate.fullTopic && currentDebate.fullTopic !== currentDebate.topic && (
-        <div className="p-5 bg-secondary/20 border border-border/50 rounded-xl text-sm text-muted-foreground leading-relaxed">
+        <div className="p-5 glass rounded-2xl text-sm text-muted-foreground leading-relaxed">
           <span className="font-medium text-foreground/70 text-xs uppercase tracking-wider block mb-2">
             Original Topic
           </span>
@@ -249,7 +249,7 @@ export default function Debate() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="flex flex-col h-full p-4 sm:p-6 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-200 hover:border-primary/20"
+              className="flex flex-col h-full p-4 sm:p-6 glass rounded-2xl sm:rounded-3xl overflow-hidden hover:border-accent-violet/40 hover:shadow-[0_16px_60px_-16px_rgba(168,85,247,0.45)] transition-all duration-200"
             >
               <div className="flex items-center justify-between mb-3 pb-3 sm:mb-4 sm:pb-4 border-b border-border/50">
                 <h3
@@ -279,7 +279,7 @@ export default function Debate() {
                 </div>
               ) : (
                 <div className="flex flex-col h-full space-y-3 sm:space-y-4">
-                  <div className="flex items-center justify-between gap-2 text-sm bg-secondary/30 p-2 rounded-lg">
+                  <div className="flex items-center justify-between gap-2 text-sm bg-white/[0.04] border border-white/10 p-2 rounded-xl">
                     <span className="font-medium text-muted-foreground">
                       Verdict
                     </span>

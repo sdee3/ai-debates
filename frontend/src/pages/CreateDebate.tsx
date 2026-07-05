@@ -81,7 +81,7 @@ export default function CreateDebate() {
         noIndex
       />
       <div className="space-y-1 sm:space-y-1.5 text-center">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-accent-indigo via-accent-violet to-accent-pink bg-clip-text text-transparent">
           Create New Debate
         </h1>
         <p className="text-sm sm:text-base text-muted-foreground">
@@ -97,11 +97,11 @@ export default function CreateDebate() {
         </div>
       )}
 
-      <div className="space-y-5 sm:space-y-6 bg-card/50 p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl border border-border/50 shadow-sm backdrop-blur-sm">
-        <div className="space-y-1.5 sm:space-y-2">
+      <div className="space-y-5 sm:space-y-6 glass p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl">
+        <div className="space-y-2 sm:space-y-3">
           <label
             htmlFor="topic"
-            className="text-sm font-medium text-foreground/80"
+            className="block text-sm font-medium text-foreground/80"
           >
             Topic
           </label>
@@ -110,15 +110,15 @@ export default function CreateDebate() {
             value={topic}
             onChange={(e) => setTopic(e.target.value.slice(0, 5000))}
             placeholder="e.g., Artificial intelligence is a threat to humanity"
-            className="w-full min-h-[140px] sm:min-h-[120px] p-3 sm:p-4 bg-background/50 border border-border rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-y placeholder:text-muted-foreground/50 text-base leading-relaxed"
+            className="w-full min-h-[140px] sm:min-h-[120px] p-3 sm:p-4 bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-accent-violet/40 focus:border-accent-violet/40 transition-all resize-y placeholder:text-muted-foreground/50 text-base leading-relaxed backdrop-blur-sm"
           />
           <div className="text-xs text-muted-foreground text-right">
             {topic.length}/5000
           </div>
         </div>
 
-        <div className="space-y-1.5 sm:space-y-2">
-          <label className="text-sm font-medium text-foreground/80">
+        <div className="space-y-2 sm:space-y-3">
+          <label className="block text-sm font-medium text-foreground/80">
             Select Models{" "}
             <span className="text-muted-foreground ml-1">
               ({selectedModels.length})
@@ -193,8 +193,8 @@ export default function CreateDebate() {
                   className={cn(
                     "flex items-center justify-center px-2.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl border transition-all duration-200 cursor-pointer",
                     isSelected
-                      ? "bg-primary/10 border-primary text-primary shadow-sm"
-                      : "bg-background/50 border-border text-muted-foreground hover:border-primary/50 hover:text-foreground hover:bg-accent/5",
+                      ? "bg-accent-violet/15 border-accent-violet text-accent-violet"
+                      : "bg-white/[0.03] border-white/10 text-muted-foreground hover:border-accent-violet/40 hover:text-foreground hover:bg-white/[0.06]",
                   )}
                 >
                   {model.name}
@@ -204,7 +204,7 @@ export default function CreateDebate() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 p-3 sm:p-4 bg-background/50 border border-border rounded-lg sm:rounded-xl">
+        <div className="flex items-center gap-3 p-3 sm:p-4 bg-white/[0.03] border border-white/10 rounded-xl sm:rounded-2xl backdrop-blur-sm">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             {isPublic ? (
               <Globe className="h-5 w-5 shrink-0 text-green-500" />
@@ -248,7 +248,7 @@ export default function CreateDebate() {
         <button
           onClick={handleCreate}
           disabled={creating}
-          className="w-full py-3 sm:py-3.5 text-base sm:text-lg font-medium text-white transition-all duration-200 bg-primary rounded-lg sm:rounded-xl hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed sm:hover:-translate-y-0.5 cursor-pointer"
+          className="w-full py-3 sm:py-3.5 text-base sm:text-lg font-semibold text-white transition-all duration-200 rounded-xl sm:rounded-2xl bg-gradient-to-r from-accent-indigo via-accent-violet to-accent-pink shadow-[0_10px_40px_-12px_rgba(168,85,247,0.7)] hover:shadow-[0_14px_50px_-8px_rgba(236,72,153,0.7)] hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
         >
           {creating ? (
             <span className="flex items-center justify-center">
