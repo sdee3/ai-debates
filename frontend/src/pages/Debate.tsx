@@ -131,9 +131,9 @@ export default function Debate() {
   }
 
   const getRankingColor = (ranking: number) => {
-    if (ranking <= 2) return "bg-gradient-to-r from-rose-500 to-orange-500"
-    if (ranking === 3) return "bg-gradient-to-r from-amber-400 to-yellow-500"
-    return "bg-gradient-to-r from-emerald-400 to-teal-500"
+    if (ranking <= 2) return "bg-gradient-to-r from-rose-700 to-orange-700"
+    if (ranking === 3) return "bg-gradient-to-r from-amber-600 to-yellow-700"
+    return "bg-gradient-to-r from-emerald-700 to-teal-700"
   }
 
   const getRankingLabel = (ranking: number) => {
