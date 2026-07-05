@@ -33,3 +33,5 @@ backend/convex/_generated/
 
 .env*
 !.env.example
+
+.tmp*
