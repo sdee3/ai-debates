@@ -15,6 +15,6 @@
     "@types/node": "^25.7.0",
     "convex-test": "^0.0.38",
     "typescript": "^5.8.0",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   }
 }
