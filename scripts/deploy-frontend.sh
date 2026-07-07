@@ -2,6 +2,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${REPO_ROOT}"
+
 source "${SCRIPT_DIR}/.env"
 # shellcheck source=../../identity/shared/clerk-csp.sh
 source "${SCRIPT_DIR}/../../identity/shared/clerk-csp.sh"
@@ -31,7 +34,7 @@ EOF
 
 echo "=== Building frontend (production env from frontend/.env.production) ==="
 write_production_env
-pnpm --dir ./frontend build --mode production
+pnpm --dir "${REPO_ROOT}/frontend" build --mode production
 
 echo ""
 echo "=== Emptying S3 bucket: s3://${BUCKET} ==="

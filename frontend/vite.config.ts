@@ -79,6 +79,11 @@ export default defineConfig({
       "@convex": path.resolve(__dirname, "../backend/convex/_generated"),
     },
   },
+  server: {
+    fs: {
+      allow: [".."],
+    },
+  },
   build: {
     rollupOptions: {
       output: {
