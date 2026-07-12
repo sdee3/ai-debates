@@ -1,7 +1,6 @@
 import { lazy, Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import Header from "./components/Header"
-import ReloadPrompt from "./components/ReloadPrompt"
 import { ErrorBoundary } from "./components/ErrorBoundary"
 import { DebateLoadError } from "./components/DebateLoadError"
 import PageLoader from "./components/PageLoader"
@@ -77,7 +76,6 @@ function App() {
             />
           </Routes>
         </main>
-        <ReloadPrompt />
       </div>
     </Router>
   )

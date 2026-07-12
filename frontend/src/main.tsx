@@ -4,6 +4,11 @@ import { HelmetProvider } from "react-helmet-async"
 import { ClerkProvider } from "@clerk/react"
 import { ConvexReactClient } from "convex/react"
 import "./index.css"
+
+if (import.meta.env.PROD) {
+  void import("./pwa")
+}
+
 import App from "./App.tsx"
 import { ConvexProviderWithClerkTemplate } from "./lib/convexClerkAuth"
 import {

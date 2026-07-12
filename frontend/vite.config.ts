@@ -1,7 +1,29 @@
-import { defineConfig } from "vite"
+import { defineConfig, type Plugin } from "vite"
 import react from "@vitejs/plugin-react"
 import { VitePWA } from "vite-plugin-pwa"
 import path from "path"
+
+const BUILD_ID = new Date().toISOString()
+
+function buildIdPlugin(buildId: string): Plugin {
+  return {
+    name: "build-id",
+    config() {
+      return {
+        define: {
+          __BUILD_ID__: JSON.stringify(buildId),
+        },
+      }
+    },
+    generateBundle() {
+      this.emitFile({
+        type: "asset",
+        fileName: "build-id.txt",
+        source: buildId,
+      })
+    },
+  }
+}
 
 function vendorChunk(id: string): string | undefined {
   if (!id.includes("node_modules")) return undefined
@@ -42,8 +64,10 @@ export default defineConfig({
   envPrefix: ["VITE_"],
   plugins: [
     react(),
+    buildIdPlugin(BUILD_ID),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: false,
       includeAssets: ["favicon.svg", "robots.txt", "sitemap.xml"],
       pwaAssets: {
         image: "public/favicon.svg",
@@ -64,10 +88,34 @@ export default defineConfig({
         categories: ["productivity", "education"],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Installability only — no offline shell; always fetch fresh HTML/JS/CSS.
+        globPatterns: ["**/*.{ico,png,svg}"],
+        navigateFallback: null,
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: ({ request }) =>
+              request.destination === "script" ||
+              request.destination === "style",
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: /^https:\/\/.*\.convex\.cloud\/.*/i,
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: /^https:\/\/.*\.clerk\.accounts\.dev\/.*/i,
+            handler: "NetworkOnly",
+          },
+          {
+            urlPattern: /^https:\/\/.*\.clerk\.com\/.*/i,
+            handler: "NetworkOnly",
+          },
+        ],
       },
       devOptions: {
         enabled: false,
