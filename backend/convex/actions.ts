@@ -339,7 +339,8 @@ export const runDebateResponses = internalAction({
       return;
     }
 
-    const prompt = `Topic: "${debate.topic}"`;
+    // Prefer the user's original input; fall back to topic for older debates.
+    const prompt = `Topic: "${debate.fullTopic ?? debate.topic}"`;
     const contentHash = hashTopic(prompt.slice(0, 120));
 
     await Promise.all(
