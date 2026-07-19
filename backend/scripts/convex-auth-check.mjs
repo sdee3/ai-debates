@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import ts from "typescript";
+// TS 7 ships no classic Compiler API; use the side-by-side TS 6 package.
+import ts from "@typescript/typescript6";
 
 const REPO_ROOT = process.cwd();
 const CONVEX_DIR = path.join(REPO_ROOT, "convex");
