@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       convex:
-        specifier: ^1.42.3
-        version: 1.42.3
+        specifier: ^1.45.0
+        version: 1.45.0
     devDependencies:
       '@edge-runtime/vm':
         specifier: ^5.0.0
@@ -22,8 +22,8 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       convex-test:
-        specifier: ^0.0.54
-        version: 0.0.54(convex@1.42.3)
+        specifier: ^0.0.56
+        version: 0.0.56(convex@1.45.0)
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -498,14 +498,14 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
-  convex-test@0.0.54:
-    resolution: {integrity: sha512-C0v2SQcuxrELAJRNzE6fQ686XDPor7UFoC22jcoJXeCRqhLo8ZIMZ4jyUHoo1UdAL2enCb0AbiprCVpLDN8u9Q==}
+  convex-test@0.0.56:
+    resolution: {integrity: sha512-dLYXlQjKFoGqvjAmPzyLgb2HsYI7iLo1iuNTU2DZmSrMRLWosYk94erjSU67GG5ovfP6+MjX8RJO+ebhmL6QYA==}
     peerDependencies:
-      convex: ^1.32.0
+      convex: ^1.43.0
 
-  convex@1.42.3:
-    resolution: {integrity: sha512-7Tz/lH6UlZdiqzLPF/zrlH6Rlo/DOp836dL+GZkUMEQ2jaGGNnBIiIDcOOiEqtfSehuQ65r/rdNMnb4LupowaA==}
-    engines: {node: '>=18.0.0', npm: '>=7.0.0'}
+  convex@1.45.0:
+    resolution: {integrity: sha512-AV3B56Ptu/14d76g3urBJ50dwpiZa6uJaLT84OWox5aCwZIJiuAamdjv3lLHDzs8vv5kC31anEZohhUe3qJ2bA==}
+    engines: {node: '>=20.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
       '@auth0/auth0-react': ^2.0.1
@@ -1105,11 +1105,11 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  convex-test@0.0.54(convex@1.42.3):
+  convex-test@0.0.56(convex@1.45.0):
     dependencies:
-      convex: 1.42.3
+      convex: 1.45.0
 
-  convex@1.42.3:
+  convex@1.45.0:
     dependencies:
       esbuild: 0.27.0
       prettier: 3.8.3
