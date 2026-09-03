@@ -17,6 +17,8 @@ VIEWER_RESPONSE_FUNCTION_TEMPLATE="${SCRIPT_DIR}/cloudfront/debates-viewer-respo
 CONTENT_SECURITY_POLICY="${CONTENT_SECURITY_POLICY:-${SDEE3_CLERK_CONTENT_SECURITY_POLICY}}"
 # shellcheck source=../../identity/scripts/lib/cloudfront-security-headers.sh
 source "${SCRIPT_DIR}/../../identity/scripts/lib/cloudfront-security-headers.sh"
+# shellcheck source=../../identity/scripts/lib/upload-ads-txt.sh
+source "${SCRIPT_DIR}/../../identity/scripts/lib/upload-ads-txt.sh"
 
 
 write_production_env() {
@@ -84,6 +86,10 @@ aws s3 cp "${DIST_DIR}/index.html" "s3://${BUCKET}/index.html" \
   --region "${REGION}" \
   --content-type "text/html" \
   --cache-control "no-cache, no-store, must-revalidate"
+
+echo ""
+echo "=== Uploading ads.txt (Google AdSense) ==="
+upload_sdee3_ads_txt
 
 echo ""
 echo "=== Verifying Lambda@Edge code integrity ==="
