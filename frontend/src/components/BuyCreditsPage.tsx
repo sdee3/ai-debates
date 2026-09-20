@@ -57,6 +57,8 @@ function appLabel(appSlug: CreditLedgerEntry["appSlug"]): string | null {
       return "Astro Mate"
     case "portfolio":
       return "Portfolio"
+    case "mailer":
+      return "Mailer"
   }
 }
 
