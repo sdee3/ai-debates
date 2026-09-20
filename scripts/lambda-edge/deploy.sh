@@ -171,54 +171,7 @@ aws lambda add-permission \
   || echo "  Invoke permission already exists for version ${LAMBDA_VERSION}."
 
 # ---------------------------------------------------------------------------
-# 5. Update CloudFront distribution (associate Lambda@Edge)
-# ---------------------------------------------------------------------------
-echo "Checking CloudFront distribution ${DISTRIBUTION_ID}..."
-
-# Get current distribution config
-CF_CONFIG=$(aws cloudfront get-distribution-config \
-  --id "${DISTRIBUTION_ID}" \
-  --region "${REGION}" \
-  --output json)
-
-ETAG=$(echo "${CF_CONFIG}" | jq -r '.ETag')
-CURRENT_CONFIG=$(echo "${CF_CONFIG}" | jq '.DistributionConfig')
-
-# Check if Lambda is already associated
-echo "Checking existing Lambda@Edge association..."
-EXISTING_ARN=$(echo "${CURRENT_CONFIG}" | jq -r '.DefaultCacheBehavior.LambdaFunctionAssociations.Items[]? | select(.EventType == "origin-request") | .LambdaFunctionARN // empty')
-
-if [ -n "${EXISTING_ARN}" ]; then
-  echo "Existing Lambda@Edge origin-request association found: ${EXISTING_ARN}"
-  echo "Updating to new version: ${LAMBDA_VERSION_ARN}"
-else
-  echo "No existing Lambda@Edge association found. Adding new one..."
-fi
-
-# Build updated config: replace or add the LambdaFunctionAssociations on DefaultCacheBehavior
-UPDATED_CONFIG=$(echo "${CURRENT_CONFIG}" | jq --arg arn "${LAMBDA_VERSION_ARN}" '
-  .DefaultCacheBehavior.LambdaFunctionAssociations = {
-    Quantity: 1,
-    Items: [
-      {
-        LambdaFunctionARN: $arn,
-        EventType: "origin-request",
-        IncludeBody: false
-      }
-    ]
-  }
-')
-
-echo "Updating CloudFront distribution..."
-aws cloudfront update-distribution \
-  --id "${DISTRIBUTION_ID}" \
-  --distribution-config "${UPDATED_CONFIG}" \
-  --if-match "${ETAG}" \
-  --region "${REGION}" \
-  --output json
-
-# ---------------------------------------------------------------------------
-# 6. Cleanup
+# 5. Cleanup
 # ---------------------------------------------------------------------------
 rm -rf "${BUILD_DIR}"
 
@@ -227,7 +180,13 @@ echo "=== Lambda@Edge deployment complete ==="
 echo "Function: ${LAMBDA_FUNCTION_NAME}"
 echo "Version:  ${LAMBDA_VERSION}"
 echo "ARN:      ${LAMBDA_VERSION_ARN}"
-echo "CloudFront Distribution: ${DISTRIBUTION_ID}"
+echo ""
+echo "Terraform owns the CloudFront distribution. Bump the pinned version in"
+echo "infrastructure/aws/sdee3-frontends/variables.tf, then apply:"
+echo ""
+echo "  lambda_edge_ai_debates_seo_router = \"${LAMBDA_VERSION_ARN}\""
+echo ""
+echo "  cd infrastructure/aws/sdee3-frontends && ./tf.sh apply"
 echo ""
 # Verify function state after update
 echo "Verifying Lambda function state..."
@@ -237,5 +196,3 @@ FUNCTION_STATE=$(aws lambda get-function \
   --query 'Configuration.State' \
   --output text)
 echo "Function state: ${FUNCTION_STATE}"
-
-echo "Note: CloudFront distribution updates can take 5-15 minutes to propagate globally."
