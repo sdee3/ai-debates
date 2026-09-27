@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# AWS CLI v2 pipes every service command's stdout through $PAGER when stdout is
+# a terminal. An exported LESS (e.g. LESS=-R) also overrides the CLI's own
+# LESS=FRX default, so less no longer quits on short output and the deploy hangs
+# waiting for "q". S3 cp/sync/rm are unaffected either way.
+export AWS_PAGER=""
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
