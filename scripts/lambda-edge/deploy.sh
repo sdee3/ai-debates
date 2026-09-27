@@ -100,6 +100,25 @@ if [ -z "${FUNCTION_ARN}" ] || [ "${FUNCTION_ARN}" = "None" ]; then
     --query 'FunctionArn' \
     --output text
 else
+  # Skip the update entirely when the live code already matches what we built:
+  # no new version means no pin bump and no CloudFront roll-out.
+  LIVE_URL=$(aws lambda get-function \
+    --function-name "${LAMBDA_FUNCTION_NAME}" \
+    --region "${REGION}" \
+    --query 'Code.Location' \
+    --output text)
+  LIVE_SHA=$(curl -sS "${LIVE_URL}" | funzip | openssl dgst -sha256 -binary | openssl base64)
+  NEW_SHA=$(openssl dgst -sha256 -binary "${BUILD_DIR}/index.js" | openssl base64)
+
+  if [ "${LIVE_SHA}" = "${NEW_SHA}" ]; then
+    rm -rf "${BUILD_DIR}"
+    echo ""
+    echo "=== No deployment needed ==="
+    echo "Live code already matches (sha256 ${NEW_SHA})."
+    echo "No new version published; CloudFront keeps its pinned version."
+    exit 0
+  fi
+
   echo "Updating Lambda function code..."
   aws lambda update-function-code \
     --function-name "${LAMBDA_FUNCTION_NAME}" \
