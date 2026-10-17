@@ -135,3 +135,30 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .animate-float-glow { animation: none; }
 }
+
+/* Match WriteMapper's headline entrance: fade in while settling upward 30px. */
+@media (prefers-reduced-motion: no-preference) {
+  .debate-hero-title {
+    animation: debate-heading-enter 660ms ease-out 330ms both;
+  }
+  .debate-hero-copy {
+    animation: debate-heading-enter 660ms ease-out 500ms both;
+  }
+  .debate-hero-cta {
+    animation: debate-hero-fade 660ms ease-out 670ms both;
+  }
+}
+@keyframes debate-hero-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes debate-heading-enter {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
