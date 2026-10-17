@@ -59,6 +59,8 @@ function appLabel(appSlug: CreditLedgerEntry["appSlug"]): string | null {
       return "Portfolio"
     case "mailer":
       return "Mailer"
+    default:
+      return null
   }
 }
 
