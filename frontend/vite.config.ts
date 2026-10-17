@@ -1,7 +1,7 @@
 import { defineConfig, type Plugin } from "vite"
 import react from "@vitejs/plugin-react"
 import { VitePWA } from "vite-plugin-pwa"
-import path from "path"
+import path from "node:path"
 
 const BUILD_ID = new Date().toISOString()
 
@@ -124,7 +124,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@convex": path.resolve(__dirname, "../backend/convex/_generated"),
+      "@convex": path.resolve(import.meta.dirname, "../backend/convex/_generated"),
     },
   },
   server: {
