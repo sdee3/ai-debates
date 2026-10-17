@@ -80,9 +80,8 @@ test("getDebateOwnerId returns the debate owner", async () => {
   expect(ownerId).toBe("owner_user")
 })
 
-test("rate limit blocks repeated generateCompletion calls", async () => {
+test("rate limiter blocks the 31st attempt for one key", async () => {
   const t = convexTest(schema, modules)
-  const asUser = t.withIdentity({ subject: "rate_limited_user" })
 
   for (let index = 0; index < 30; index += 1) {
     const result = await t.mutation(internal.lib.rateLimit.checkAndIncrement, {
