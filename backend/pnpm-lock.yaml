@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       convex:
-        specifier: ^1.47.0
-        version: 1.47.0
+        specifier: ^1.49.0
+        version: 1.49.0
     devDependencies:
       '@edge-runtime/vm':
         specifier: ^5.0.0
@@ -23,7 +23,7 @@ importers:
         version: 6.0.2
       convex-test:
         specifier: ^0.0.60
-        version: 0.0.60(convex@1.47.0)
+        version: 0.0.60(convex@1.49.0)
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -490,9 +490,9 @@ packages:
     peerDependencies:
       convex: ^1.43.0
 
-  convex@1.47.0:
-    resolution: {integrity: sha512-B1z/lOmex7i09NASq8+2WG9rZLzGXXOSkpwGOpaNIvOs4awyW4RMgpVBjt8r2wvvHwhEBEsOr2pGYpulnmAxYQ==}
-    engines: {node: '>=20.0.0', npm: '>=7.0.0'}
+  convex@1.49.0:
+    resolution: {integrity: sha512-mkr9oXF8/arkCI1kvYyGytWd62oVXNABh4uwLeI4UQVN6Zuudm4DlmSzNUJKF63djk6f/uUXC+6ffuVSkPLvzA==}
+    engines: {node: '>=22.0.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
       '@auth0/auth0-react': ^2.0.1
@@ -1053,11 +1053,11 @@ snapshots:
 
   chai@6.2.2: {}
 
-  convex-test@0.0.60(convex@1.47.0):
+  convex-test@0.0.60(convex@1.49.0):
     dependencies:
-      convex: 1.47.0
+      convex: 1.49.0
 
-  convex@1.47.0:
+  convex@1.49.0:
     dependencies:
       esbuild: 0.27.0
       prettier: 3.9.9
