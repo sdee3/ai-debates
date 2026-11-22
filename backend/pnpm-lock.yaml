@@ -22,8 +22,8 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
       convex-test:
-        specifier: ^0.0.67
-        version: 0.0.67(convex@1.49.0)
+        specifier: ^0.0.73
+        version: 0.0.73(convex@1.49.0)
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -467,10 +467,10 @@ packages:
     resolution: {integrity: sha512-XWAtwJ6OHO+tj0EKCs0Y2UamnyOxseZWltU4x2U2wh8g4AigdjwvtUjvLP2tqkA/avxHEtzxNaqGq/YGNwckKg==}
     engines: {node: '>=18'}
 
-  convex-test@0.0.67:
-    resolution: {integrity: sha512-UCAzL8pwo4akHs6dppAU3Rbo2Gzdp1KZp9kcsLGFBaL7JuXOfUZFxe16ywQjnyDZ+uQhawjTRx2j6Hd8FoBm5Q==}
+  convex-test@0.0.73:
+    resolution: {integrity: sha512-4VAuW26Iy/6mMKsmWfS3e97golfO0mPGd/qDcN5IT4uCeXHP1a3tYIaOPgXhOKaEuBIw93qLa2URB9uH3Mqo0Q==}
     peerDependencies:
-      convex: ^1.43.0
+      convex: ^1.46.0
 
   convex@1.49.0:
     resolution: {integrity: sha512-mkr9oXF8/arkCI1kvYyGytWd62oVXNABh4uwLeI4UQVN6Zuudm4DlmSzNUJKF63djk6f/uUXC+6ffuVSkPLvzA==}
@@ -1000,7 +1000,7 @@ snapshots:
 
   chai@6.3.0: {}
 
-  convex-test@0.0.67(convex@1.49.0):
+  convex-test@0.0.73(convex@1.49.0):
     dependencies:
       convex: 1.49.0
 
